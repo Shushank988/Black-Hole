@@ -457,6 +457,12 @@ canvas {
   color: var(--text-muted);
 }
 
+.badge.warning {
+  background: rgba(255, 170, 0, 0.15);
+  border: 1px solid rgba(255, 170, 0, 0.4);
+  color: var(--accent-gold);
+}
+
 /* Spectral Diagnostic Box in Telemetry HUD */
 .spectral-bar-desc {
   margin-top: 8px;

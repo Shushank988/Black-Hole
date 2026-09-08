@@ -56,6 +56,9 @@ const badgeTarget = document.getElementById('badge-target');
 const badgeSpectral = document.getElementById('badge-spectral');
 const badgeJet = document.getElementById('badge-jet');
 const badgeDoppler = document.getElementById('badge-doppler');
+const badgeOptics = document.getElementById('badge-optics');
+const btnEhtBlur = document.getElementById('btn-eht-blur');
+const labelEhtBlur = document.getElementById('label-eht-blur');
 const valSpectralLambda = document.getElementById('val-spectral-lambda');
 const valSpectralDesc = document.getElementById('val-spectral-desc');
 const timeSlider = document.getElementById('time-slider');
@@ -130,6 +133,72 @@ const material = new THREE.ShaderMaterial({ vertexShader, fragmentShader, unifor
 const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
 scene.add(quad);
 
+// --- EHT 20 μas Telescope Beam Post-Processing Pass ---
+const postScene = new THREE.Scene();
+const postCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+  minFilter: THREE.LinearFilter,
+  magFilter: THREE.LinearFilter,
+  format: THREE.RGBAFormat,
+});
+
+const postVertexShader = `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = vec4(position, 1.0);
+}
+`;
+
+const postFragmentShader = `
+uniform sampler2D tDiffuse;
+uniform vec2 uResolution;
+uniform bool uEHTBeamBlur;
+uniform float uBlurRadius;
+varying vec2 vUv;
+
+void main() {
+  if (!uEHTBeamBlur) {
+    gl_FragColor = texture2D(tDiffuse, vUv);
+    return;
+  }
+  // 2D Gaussian beam convolution (simulating Earth VLBI 20 μas synthesized beam)
+  vec4 col = vec4(0.0);
+  float total = 0.0;
+  vec2 texel = 1.0 / uResolution;
+  float r = uBlurRadius;
+  
+  for (float x = -3.0; x <= 3.0; x += 1.0) {
+    for (float y = -3.0; y <= 3.0; y += 1.0) {
+      float d2 = x * x + y * y;
+      if (d2 <= 9.5) {
+        float w = exp(-d2 / (2.0 * 2.2 * 2.2));
+        col += texture2D(tDiffuse, vUv + vec2(x, y) * texel * r) * w;
+        total += w;
+      }
+    }
+  }
+  gl_FragColor = col / total;
+}
+`;
+
+const postUniforms = {
+  tDiffuse: { value: renderTarget.texture },
+  uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+  uEHTBeamBlur: { value: state.ehtBeamBlur },
+  uBlurRadius: { value: state.ehtBlurRadius },
+};
+
+const postMaterial = new THREE.ShaderMaterial({
+  vertexShader: postVertexShader,
+  fragmentShader: postFragmentShader,
+  uniforms: postUniforms,
+  depthTest: false,
+  depthWrite: false,
+});
+const postQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), postMaterial);
+postScene.add(postQuad);
+
 // --- Matrix Update ---
 function updateMatrices() {
   camera.updateMatrixWorld();
@@ -160,6 +229,12 @@ function syncUniforms() {
     badgeDoppler.className = `badge ${state.dopplerEnabled ? 'on' : 'off'}`;
     badgeDoppler.textContent = `Doppler: ${state.dopplerEnabled ? 'ON' : 'OFF'}`;
   }
+  if (badgeOptics) {
+    badgeOptics.textContent = state.ehtBeamBlur ? 'Optics: 20 μas Earth VLBI' : 'Optics: Infinite Res';
+    badgeOptics.className = `badge ${state.ehtBeamBlur ? 'warning' : 'on'}`;
+  }
+  postUniforms.uEHTBeamBlur.value = state.ehtBeamBlur;
+  postUniforms.uBlurRadius.value = state.ehtBlurRadius;
 
   const curPalette = COLOR_PALETTES[state.colorPalette] || COLOR_PALETTES[0];
   if (badgeSpectral) badgeSpectral.textContent = `Band: ${curPalette.shortName}`;
@@ -232,6 +307,8 @@ function updateActiveEquations() {
   if (state.colorPalette === 1 || state.dopplerEnabled) activeKeys.add('dopplerColorShift');
   // 11. Synchrotron Beaming: Active in EHT or X-Ray mode
   if (state.colorPalette === 0 || state.colorPalette === 3) activeKeys.add('synchrotronBeaming');
+  // 12. Earth VLBI Beam Convolution: Active in EHT mode or when EHT blur toggle is on
+  if (state.ehtBeamBlur || state.colorPalette === 0) activeKeys.add('ehtBeamConvolution');
 
   const count = activeKeys.size;
   if (valActiveEqCount) valActiveEqCount.textContent = `${count}`;
@@ -450,6 +527,16 @@ function setupGUI() {
   gf.add(state, 'stepSize', 0.04, 0.18, 0.01).name('Step Size').onChange(syncUniforms);
   gf.close();
 
+  const of = gui.addFolder('Observational Optics');
+  of.add(state, 'ehtBeamBlur').name('EHT Beam Blur (20μas)').listen().onChange((v) => {
+    updateEhtBlurUI();
+    showToast(v ? 'EHT 20 μas Earth VLBI Blur ON (Matches Real EHT Photos)' : 'Near-Field Infinite Resolution (Ground Truth)');
+  });
+  of.add(state, 'ehtBlurRadius', 1.0, 10.0, 0.5).name('Beam Blur FWHM').onChange((v) => {
+    postUniforms.uBlurRadius.value = v;
+  });
+  of.close();
+
   gui.open();
 }
 
@@ -467,6 +554,7 @@ function renderLatex() {
     ['formula-eht', 'ehtAngularDiameter'],
     ['formula-doppler-shift', 'dopplerColorShift'],
     ['formula-synchrotron', 'synchrotronBeaming'],
+    ['formula-eht-convolution', 'ehtBeamConvolution'],
   ];
   for (const [elId, key] of pairs) {
     const el = document.getElementById(elId);
@@ -605,6 +693,31 @@ function setupEvents() {
     });
   }
 
+  // EHT Beam Blur button
+  function updateEhtBlurUI() {
+    postUniforms.uEHTBeamBlur.value = state.ehtBeamBlur;
+    if (btnEhtBlur) {
+      btnEhtBlur.classList.toggle('active', state.ehtBeamBlur);
+      if (labelEhtBlur) labelEhtBlur.textContent = state.ehtBeamBlur ? 'EHT Blur: ON' : 'EHT Blur (20μas)';
+    }
+    if (badgeOptics) {
+      badgeOptics.textContent = state.ehtBeamBlur ? 'Optics: 20 μas Earth VLBI' : 'Optics: Infinite Res';
+      badgeOptics.className = `badge ${state.ehtBeamBlur ? 'warning' : 'on'}`;
+    }
+    if (gui) gui.controllersRecursive().forEach((c) => c.updateDisplay());
+    updateActiveEquations();
+  }
+
+  if (btnEhtBlur) {
+    btnEhtBlur.addEventListener('click', () => {
+      state.ehtBeamBlur = !state.ehtBeamBlur;
+      updateEhtBlurUI();
+      showToast(state.ehtBeamBlur 
+        ? '📡 EHT 20 μas Earth Beam Blur ON (Matches Real EHT Photos)' 
+        : '🔭 Near-Field Infinite Resolution (General Relativity Ground Truth)');
+    });
+  }
+
   // Reset
   if (btnReset) btnReset.addEventListener('click', resetToDefaults);
 
@@ -622,10 +735,18 @@ function setupEvents() {
   if (btnSnapshot) {
     btnSnapshot.addEventListener('click', () => {
       updateMatrices();
-      renderer.render(scene, camera);
+      if (state.ehtBeamBlur) {
+        renderer.setRenderTarget(renderTarget);
+        renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+        renderer.render(postScene, postCamera);
+      } else {
+        renderer.setRenderTarget(null);
+        renderer.render(scene, camera);
+      }
       const url = renderer.domElement.toDataURL('image/png');
       const a = document.createElement('a');
-      a.download = `blackhole-${state.target}-${Date.now()}.png`;
+      a.download = `blackhole-${state.target}-${state.ehtBeamBlur ? 'eht-beam-' : ''}${Date.now()}.png`;
       a.href = url;
       a.click();
       showToast('Screenshot saved!');
@@ -637,7 +758,9 @@ function setupEvents() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    renderTarget.setSize(window.innerWidth, window.innerHeight);
     uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+    postUniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
   });
 }
 
@@ -666,7 +789,16 @@ function animate(now) {
 
   controls.update();
   updateMatrices();
-  renderer.render(scene, camera);
+
+  if (state.ehtBeamBlur) {
+    renderer.setRenderTarget(renderTarget);
+    renderer.render(scene, camera);
+    renderer.setRenderTarget(null);
+    renderer.render(postScene, postCamera);
+  } else {
+    renderer.setRenderTarget(null);
+    renderer.render(scene, camera);
+  }
 
   frameCnt++;
   if (now - fpsT >= 1000) {

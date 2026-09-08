@@ -64,6 +64,8 @@ export const PHYSICS_DEFAULTS = {
   timeSpeed: 1.0,
   currentTime4D: 0.0,
   camFOV: 50,
+  ehtBeamBlur: false, // 20 microarcsecond EHT telescope resolution limit beam convolution
+  ehtBlurRadius: 5.5,
 };
 
 export const COLOR_PALETTES = [
@@ -207,4 +209,5 @@ export const LATEX_FORMULAS = {
   dopplerColorShift: String.raw`\nu_{\text{obs}} = \delta \cdot \nu_{\text{emit}} = \frac{\sqrt{1 - \frac{r_s}{r}}}{\gamma \left(1 - \frac{\vec{v} \cdot \hat{n}}{c}\right)} \, \nu_{\text{emit}} \quad (\text{Relativistic Optical Doppler})`,
   synchrotronBeaming: String.raw`I_\nu(\nu) = \delta^{3+\alpha} I_{0,\nu}\left(\frac{\nu}{\delta}\right) \quad (\text{EHT 1.3mm \& X-Ray Corona Beaming})`,
   ehtAngularDiameter: String.raw`\theta_{\text{EHT}} = \frac{2\, b_{\text{crit}}}{D} = \frac{3\sqrt{3}\, G M}{c^2 D} \approx \begin{cases} 51.8\;\mu\text{as} & \text{Sgr A*} \\ 42.0\;\mu\text{as} & \text{M87*} \end{cases}`,
+  ehtBeamConvolution: String.raw`\theta_{\text{beam}} \approx 1.22 \frac{\lambda}{D_{\text{Earth}}} \approx 20\text{--}25\,\mu\text{as}, \quad I_{\text{observed}}(\alpha, \beta) = [I_{\text{GR}} * \mathcal{G}_{\text{beam}}](\alpha, \beta)`,
 };
