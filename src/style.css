@@ -134,32 +134,121 @@ canvas {
   font-family: var(--font-mono);
 }
 
-/* Center Navigation Group */
-.header-center-pills {
+/* Center Navigation Sectors with Distinct Gaps */
+.header-sectors {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 12px;
   flex-wrap: wrap;
-  justify-content: center;
+  flex: 1;
+  justify-content: flex-end;
 }
 
-/* Target Switcher, Palette & Preset Bars */
-.target-bar, .palette-bar, .preset-bar {
+/* Distinct Control Sector Box (Cards / Islands) */
+.control-sector {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(10, 16, 28, 0.72);
+  padding: 3px 5px 3px 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.35);
+  transition: all 0.25s ease;
+}
+
+.control-sector:hover {
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+
+/* Sector Category Label with Micro-Dot and Vertical Divider */
+.sector-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.85px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  padding-right: 7px;
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Glowing Indicator Dots for each Sector */
+.sector-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.sector-dot.cyan {
+  background: #00e5ff;
+  box-shadow: 0 0 6px rgba(0, 229, 255, 0.85);
+}
+.sector-dot.gold {
+  background: #ffaa00;
+  box-shadow: 0 0 6px rgba(255, 170, 0, 0.85);
+}
+.sector-dot.purple {
+  background: #b026ff;
+  box-shadow: 0 0 6px rgba(176, 38, 255, 0.85);
+}
+.sector-dot.green {
+  background: #00ff88;
+  box-shadow: 0 0 6px rgba(0, 255, 136, 0.85);
+}
+.sector-dot.orange {
+  background: #ff5500;
+  box-shadow: 0 0 6px rgba(255, 85, 0, 0.85);
+}
+
+/* Specific Sector Glow Accents on Hover */
+#sector-targets:hover {
+  border-color: rgba(0, 229, 255, 0.35);
+}
+#sector-palette:hover {
+  border-color: rgba(255, 170, 0, 0.35);
+}
+#sector-presets:hover {
+  border-color: rgba(176, 38, 255, 0.35);
+}
+#sector-lab:hover {
+  border-color: rgba(0, 255, 136, 0.35);
+}
+#sector-system:hover {
+  border-color: rgba(255, 85, 0, 0.35);
+}
+
+/* Inner Button Containers inside Sectors */
+.sector-buttons {
   display: flex;
+  align-items: center;
   gap: 3px;
-  background: rgba(0, 0, 0, 0.45);
-  padding: 2px 3px;
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+/* Target Switcher, Palette & Preset Bars inside sectors */
+.target-bar, .palette-bar, .preset-bar, .lab-bar, .system-bar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .target-pill, .palette-pill, .preset-pill {
   background: transparent;
   border: none;
   color: var(--text-muted);
-  padding: 5px 10px;
+  padding: 5px 9px;
   border-radius: 6px;
-  font-size: 0.74rem;
+  font-size: 0.73rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -168,7 +257,7 @@ canvas {
 
 .target-pill:hover, .palette-pill:hover, .preset-pill:hover {
   color: var(--text-main);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .target-pill.active {
@@ -265,7 +354,22 @@ canvas {
   flex-shrink: 0;
 }
 
-/* Buttons */
+/* Control Sector Glass Buttons */
+.control-sector .btn-glass {
+  padding: 5px 8px;
+  font-size: 0.72rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.control-sector .btn-glass:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* Standard Buttons */
 .btn-glass {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--panel-border);
