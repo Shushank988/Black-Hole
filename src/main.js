@@ -27,7 +27,6 @@ let gui;
 
 // --- DOM ---
 const container = document.getElementById('canvas-container');
-const guiContainer = document.getElementById('gui-container');
 const mathModal = document.getElementById('math-modal');
 const btnMath = document.getElementById('btn-math');
 const btnCloseModal = document.getElementById('modal-close');
@@ -57,8 +56,6 @@ const badgeSpectral = document.getElementById('badge-spectral');
 const badgeJet = document.getElementById('badge-jet');
 const badgeDoppler = document.getElementById('badge-doppler');
 const badgeOptics = document.getElementById('badge-optics');
-const btnEhtBlur = document.getElementById('btn-eht-blur');
-const labelEhtBlur = document.getElementById('label-eht-blur');
 const valSpectralLambda = document.getElementById('val-spectral-lambda');
 const valSpectralDesc = document.getElementById('val-spectral-desc');
 const timeSlider = document.getElementById('time-slider');
@@ -238,10 +235,9 @@ function syncUniforms() {
     badgeOptics.textContent = curOptics.badge;
     badgeOptics.className = `badge ${state.ehtBeamBlur ? 'warning' : 'on'}`;
   }
-  if (btnEhtBlur && labelEhtBlur) {
-    labelEhtBlur.textContent = `Optics: ${curOptics.label.split(' ')[0]}`;
-    btnEhtBlur.classList.toggle('active', state.ehtBeamBlur);
-  }
+  document.querySelectorAll('.optics-pill').forEach((p) => {
+    p.classList.toggle('active', Number(p.dataset.optics) === state.opticsModeIndex);
+  });
   postUniforms.uEHTBeamBlur.value = state.ehtBeamBlur;
   postUniforms.uBlurRadius.value = state.ehtBlurRadius;
 
@@ -472,12 +468,10 @@ function setOpticsMode(index, toast = true) {
   postUniforms.uEHTBeamBlur.value = state.ehtBeamBlur;
   postUniforms.uBlurRadius.value = state.ehtBlurRadius;
 
-  if (btnEhtBlur) {
-    btnEhtBlur.classList.toggle('active', state.ehtBeamBlur);
-  }
-  if (labelEhtBlur) {
-    labelEhtBlur.textContent = `Optics: ${mode.label.split(' ')[0]}`;
-  }
+  document.querySelectorAll('.optics-pill').forEach((p) => {
+    p.classList.toggle('active', Number(p.dataset.optics) === state.opticsModeIndex);
+  });
+
   if (badgeOptics) {
     badgeOptics.textContent = mode.badge;
     badgeOptics.className = `badge ${state.ehtBeamBlur ? 'warning' : 'on'}`;
@@ -514,7 +508,7 @@ function showToast(msg) {
 
 // --- GUI Setup ---
 function setupGUI() {
-  gui = new GUI({ container: guiContainer, title: '4D Spacetime Lab' });
+  gui = new GUI({ title: '4D Spacetime Lab' });
   gui.add({ reset: resetToDefaults }, 'reset').name('🔄 Reset Defaults');
 
   const tf = gui.addFolder('Astronomical Target');
@@ -648,6 +642,11 @@ function setupEvents() {
     p.addEventListener('click', () => switchPalette(p.dataset.palette));
   });
 
+  // Optics pills (direct jump between Ground Truth, Space VLBI, ngEHT, EHT)
+  document.querySelectorAll('.optics-pill').forEach((p) => {
+    p.addEventListener('click', () => setOpticsMode(Number(p.dataset.optics)));
+  });
+
   // Preset pills
   document.querySelectorAll('.preset-pill').forEach((p) => {
     p.addEventListener('click', () => switchCameraPreset(p.dataset.preset));
@@ -761,14 +760,6 @@ function setupEvents() {
       filterEqAll.classList.add('active');
       filterEqActive.classList.remove('active');
       updateActiveEquations();
-    });
-  }
-
-  // Telescope optics mode cycle button (Ground Truth -> Space VLBI -> ngEHT -> EHT 1.3mm)
-  if (btnEhtBlur) {
-    btnEhtBlur.addEventListener('click', () => {
-      const nextIdx = (state.opticsModeIndex + 1) % TELESCOPE_OPTICS_MODES.length;
-      setOpticsMode(nextIdx);
     });
   }
 
