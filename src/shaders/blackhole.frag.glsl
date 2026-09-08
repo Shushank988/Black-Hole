@@ -83,7 +83,7 @@ vec3 getCelestialBackground(vec3 dir) {
         // S2 star (bright blue massive star in S-cluster)
         float s2a = dot(n, normalize(vec3(-0.55, 0.3, -0.72)));
         if (s2a > 0.999) col += vec3(0.4, 0.8, 1.0) * pow((s2a - 0.999) / 0.001, 3.0) * 7.0;
-    } else {
+    } else if (uTargetMode < 1.5) {
         // M87*: Giant elliptical galaxy halo
         float halo = exp(-pow((1.0 - dot(n, vec3(0.0, 0.0, -1.0))) * 2.2, 1.4));
         col += vec3(0.07, 0.06, 0.04) * halo;
@@ -96,6 +96,54 @@ vec3 getCelestialBackground(vec3 dir) {
             float d = length(g - id - 0.5);
             float si = smoothstep(0.38, 0.0, d) * pow((h - 0.955) / 0.045, 2.0);
             col += vec3(1.0, 0.92, 0.78) * si * 2.2;
+        }
+    } else if (uTargetMode < 2.5) {
+        // Cygnus X-1: Cygnus OB3 association + massive Blue Supergiant companion HDE 226868
+        float arm = exp(-pow((n.y - 0.12) * 3.8, 2.0));
+        col += vec3(0.015, 0.02, 0.04) * arm;
+
+        // HDE 226868 (O9.7 Iab Blue Supergiant companion star)
+        vec3 starDir = normalize(vec3(0.65, 0.15, -0.74));
+        float starDot = dot(n, starDir);
+        if (starDot > 0.9975) {
+            float core = pow((starDot - 0.9975) / 0.0025, 3.0);
+            col += vec3(0.6, 0.85, 1.0) * core * 14.0;
+        }
+        float windHaze = exp(-pow((1.0 - max(0.0, starDot)) * 12.0, 1.2));
+        col += vec3(0.12, 0.25, 0.5) * windHaze * 0.65;
+
+        vec3 g = n * 240.0;
+        vec3 id = floor(g);
+        float h = hash13(id);
+        if (h > 0.93) {
+            float d = length(g - id - 0.5);
+            col += mix(vec3(0.75, 0.9, 1.0), vec3(1.0, 0.75, 0.45), hash13(id + 2.0)) * smoothstep(0.4, 0.0, d) * 2.6;
+        }
+    } else if (uTargetMode < 3.5) {
+        // TON 618: Distant high-redshift hyper-luminous quasar host galaxy & ionization nebula
+        float quasarHalo = exp(-pow(length(n.xy) * 1.6, 1.5));
+        col += vec3(0.09, 0.045, 0.14) * quasarHalo;
+        col += vec3(0.16, 0.09, 0.04) * exp(-pow(length(n.yz) * 2.0, 1.8));
+
+        vec3 g = n * 320.0;
+        vec3 id = floor(g);
+        float h = hash13(id);
+        if (h > 0.965) {
+            float d = length(g - id - 0.5);
+            col += vec3(0.9, 0.95, 1.0) * smoothstep(0.4, 0.0, d) * 2.2;
+        }
+    } else {
+        // Gargantua: Interstellar cosmic void with distant galactic clusters and faint nebulae
+        float neb = fbm(n.xy * 2.2 + vec2(0.5, -0.8));
+        col += vec3(0.02, 0.025, 0.045) * neb;
+        col += vec3(0.035, 0.02, 0.01) * exp(-pow(n.y * 3.5, 2.0));
+
+        vec3 g = n * 220.0;
+        vec3 id = floor(g);
+        float h = hash13(id);
+        if (h > 0.94) {
+            float d = length(g - id - 0.5);
+            col += mix(vec3(0.85, 0.95, 1.0), vec3(1.0, 0.9, 0.7), hash13(id + 2.0)) * smoothstep(0.38, 0.0, d) * 2.4;
         }
     }
 
@@ -180,7 +228,7 @@ vec3 getSpectralColor(float temp, float shift, float r, float rNorm, float iscoG
         col = mix(col, c2, smoothstep(0.35, 0.75, t));
         col = mix(col, c3, smoothstep(0.75, 1.2, t));
         return col;
-    } else {
+    } else if (uColorPalette == 4) {
         // --- Mode 4: Infrared Dust Penetration (JWST NIRCam / VLT GRAVITY) ---
         // Pierces dust clouds; warm dust emission across wide accretion torus
         vec3 c0 = vec3(0.12, 0.01, 0.08);
@@ -191,6 +239,44 @@ vec3 getSpectralColor(float temp, float shift, float r, float rNorm, float iscoG
         col = mix(col, c2, smoothstep(0.35, 0.7, t));
         col = mix(col, c3, smoothstep(0.7, 1.25, t));
         return col;
+    } else if (uColorPalette == 5) {
+        // --- Mode 5: ngEHT 0.87mm (345 GHz High-Frequency Sub-mm) ---
+        // Deep electric sapphire transitioning to sharp golden amber synchrotron photon ring
+        vec3 c0 = vec3(0.01, 0.04, 0.16);
+        vec3 c1 = vec3(0.12, 0.45, 0.88);
+        vec3 c2 = vec3(1.0, 0.70, 0.18);
+        vec3 c3 = vec3(1.0, 0.98, 0.92);
+        vec3 col = mix(c0, c1, smoothstep(0.0, 0.30, t));
+        col = mix(col, c2, smoothstep(0.30, 0.65, t));
+        col = mix(col, c3, smoothstep(0.65, 1.15, t));
+        col += vec3(1.0, 0.85, 0.4) * iscoGlow * 1.6;
+        return col;
+    } else if (uColorPalette == 6) {
+        // --- Mode 6: Space VLBI (Lunar Baseline Sub-Microarcsecond Synthesis) ---
+        // Extreme dynamic range: platinum white interference fringes against deep obsidian
+        float fringe = 0.88 + 0.12 * sin(r * 42.0 + shift * 5.0);
+        vec3 c0 = vec3(0.01, 0.012, 0.025);
+        vec3 c1 = vec3(0.35, 0.45, 0.65);
+        vec3 c2 = vec3(0.95, 0.90, 0.82);
+        vec3 c3 = vec3(1.0, 1.0, 1.0);
+        vec3 col = mix(c0, c1, smoothstep(0.0, 0.28, t));
+        col = mix(col, c2, smoothstep(0.28, 0.60, t));
+        col = mix(col, c3, smoothstep(0.60, 1.05, t));
+        return col * fringe;
+    } else {
+        // --- Mode 7: IXPE Magnetic Field Polarimetry ---
+        // Fluorescent EVPA streamlines tracing toroidal and poloidal B-field loops
+        float bFieldLoops = abs(sin(r * 18.0 + shift * 8.0));
+        float evpaStriae = smoothstep(0.25, 0.85, bFieldLoops);
+
+        vec3 bNeonCyan = vec3(0.0, 0.95, 1.0);
+        vec3 bNeonMagenta = vec3(1.0, 0.05, 0.75);
+        vec3 bGoldCore = vec3(1.0, 0.95, 0.85);
+
+        vec3 col = mix(bNeonCyan, bNeonMagenta, smoothstep(0.1, 0.65, t));
+        col = mix(col, bGoldCore, smoothstep(0.65, 1.2, t));
+        col *= (0.45 + 0.55 * evpaStriae);
+        return col;
     }
 }
 
@@ -200,9 +286,12 @@ vec4 sampleDisk(vec3 pos, vec3 dir, float rs) {
 
     // Multi-spectral radial boundaries
     float effectiveOuter = uDiskOuter;
-    if (uColorPalette == 0) {
-        // EHT Radio: Synchrotron drops fast outside inner relativistic flow
+    if (uColorPalette == 0 || uColorPalette == 5) {
+        // EHT & ngEHT Radio: Synchrotron drops fast outside inner relativistic flow
         effectiveOuter = min(uDiskOuter, uDiskInner * 2.8);
+    } else if (uColorPalette == 6) {
+        // Space VLBI: sharp photon ring focus
+        effectiveOuter = min(uDiskOuter, uDiskInner * 2.4);
     } else if (uColorPalette == 3) {
         // X-Ray: Thermal Bremsstrahlung & Compton requires T > 10^6 K; outer disk emits 0 X-rays
         effectiveOuter = min(uDiskOuter, uDiskInner * 1.95);
@@ -232,10 +321,14 @@ vec4 sampleDisk(vec3 pos, vec3 dir, float rs) {
 
     // Spectral beaming exponent: I_nu ~ delta^(3 + alpha)
     float beamingPower = 3.0;
-    if (uColorPalette == 0) {
+    if (uColorPalette == 0 || uColorPalette == 5) {
         beamingPower = 3.6; // Radio synchrotron spectral index alpha ~ 0.6
+    } else if (uColorPalette == 6) {
+        beamingPower = 3.8; // Space VLBI high dynamic range
     } else if (uColorPalette == 3) {
         beamingPower = 4.5; // X-ray hard corona extreme relativistic boosting
+    } else if (uColorPalette == 7) {
+        beamingPower = 2.8; // IXPE polarization
     } else if (uColorPalette == 4) {
         beamingPower = 2.0; // Infrared dust scattering moderates beaming
     } else if (uColorPalette == 2) {
@@ -339,6 +432,21 @@ vec4 sampleJet(vec3 pos, float rs) {
         vec3 core = vec3(1.0, 0.6, 0.4);
         vec3 sheath = vec3(0.5, 0.1, 0.3);
         jetCol = mix(sheath, core, radial) * 1.5;
+    } else if (uColorPalette == 5) {
+        // ngEHT 0.87mm: High frequency synchrotron jet (electric blue core + golden sheath)
+        vec3 core = vec3(0.3, 0.7, 1.0);
+        vec3 sheath = vec3(1.0, 0.65, 0.15);
+        jetCol = mix(sheath, core, radial) * 3.6;
+    } else if (uColorPalette == 6) {
+        // Space VLBI: High-coherence platinum core
+        vec3 core = vec3(1.0, 1.0, 1.0);
+        vec3 sheath = vec3(0.4, 0.5, 0.75);
+        jetCol = mix(sheath, core, radial) * 3.4;
+    } else if (uColorPalette == 7) {
+        // IXPE: Magnetic polarization dual-helicity jet
+        vec3 core = vec3(0.0, 0.95, 1.0);
+        vec3 sheath = vec3(1.0, 0.05, 0.75);
+        jetCol = mix(sheath, core, radial) * 3.8;
     } else {
         // Optical: Synchrotron blue-violet core
         vec3 core = mix(vec3(0.5, 0.85, 1.0), vec3(0.92, 0.96, 1.0), radial);

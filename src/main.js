@@ -7,7 +7,7 @@ import './style.css';
 
 import vertexShader from './shaders/blackhole.vert.glsl?raw';
 import fragmentShader from './shaders/blackhole.frag.glsl?raw';
-import { PHYSICS_DEFAULTS, TARGET_PROFILES, COLOR_PALETTES, CAMERA_PRESETS, calculatePhysicsMetrics, LATEX_FORMULAS } from './physics/math.js';
+import { PHYSICS_DEFAULTS, TARGET_PROFILES, COLOR_PALETTES, CAMERA_PRESETS, calculatePhysicsMetrics, LATEX_FORMULAS, TELESCOPE_OPTICS_MODES } from './physics/math.js';
 
 // --- State ---
 const state = {
@@ -220,7 +220,11 @@ function syncUniforms() {
   if (valFrameDrag) valFrameDrag.textContent = `Ω_H: ${(m.omegaFrameDragging * 100).toFixed(1)}%`;
   if (valVisco) valVisco.textContent = `${(m.v_isco_fraction * 100).toFixed(1)}% c`;
   if (valIscoRadius) valIscoRadius.textContent = `r_ISCO: ${(m.r_isco / (0.5 * m.rs)).toFixed(2)} M`;
-  if (badgeTarget) badgeTarget.textContent = `Target: ${state.target === 'sgrA' ? 'Sgr A*' : 'M87*'}`;
+  const pTarget = TARGET_PROFILES[state.target] || TARGET_PROFILES.m87;
+  if (badgeTarget) {
+    const shortNames = { sgrA: 'Sgr A*', m87: 'M87*', cygX1: 'Cyg X-1', ton618: 'TON 618', gargantua: 'Gargantua' };
+    badgeTarget.textContent = `Target: ${shortNames[state.target] || pTarget.name.split(' ')[0]}`;
+  }
   if (badgeJet) {
     badgeJet.className = `badge ${state.enableJet ? 'on' : 'off'}`;
     badgeJet.textContent = `Jet: ${state.enableJet ? 'ON' : 'OFF'}`;
@@ -229,9 +233,14 @@ function syncUniforms() {
     badgeDoppler.className = `badge ${state.dopplerEnabled ? 'on' : 'off'}`;
     badgeDoppler.textContent = `Doppler: ${state.dopplerEnabled ? 'ON' : 'OFF'}`;
   }
+  const curOptics = TELESCOPE_OPTICS_MODES[state.opticsModeIndex] || TELESCOPE_OPTICS_MODES[0];
   if (badgeOptics) {
-    badgeOptics.textContent = state.ehtBeamBlur ? 'Optics: 20 μas Earth VLBI' : 'Optics: Infinite Res';
+    badgeOptics.textContent = curOptics.badge;
     badgeOptics.className = `badge ${state.ehtBeamBlur ? 'warning' : 'on'}`;
+  }
+  if (btnEhtBlur && labelEhtBlur) {
+    labelEhtBlur.textContent = `Optics: ${curOptics.label.split(' ')[0]}`;
+    btnEhtBlur.classList.toggle('active', state.ehtBeamBlur);
   }
   postUniforms.uEHTBeamBlur.value = state.ehtBeamBlur;
   postUniforms.uBlurRadius.value = state.ehtBlurRadius;
@@ -242,9 +251,8 @@ function syncUniforms() {
   if (valSpectralDesc) valSpectralDesc.textContent = curPalette.physics;
 
   if (targetTitleDesc) {
-    targetTitleDesc.textContent = state.target === 'sgrA'
-      ? 'Sagittarius A* (Milky Way Center)'
-      : 'M87* (Messier 87 Monster BH)';
+    const p = TARGET_PROFILES[state.target] || TARGET_PROFILES.m87;
+    targetTitleDesc.textContent = p.name;
   }
 
   controls.autoRotate = state.autoRotate;
@@ -261,6 +269,7 @@ function syncUniforms() {
   // Clamp inner rim so it cannot penetrate inside the outer event horizon r_+
   state.diskInner = Math.max(m.r_plus * 1.02, state.diskInner);
 
+  const p = TARGET_PROFILES[state.target] || TARGET_PROFILES.m87;
   uniforms.uMass.value = state.mass;
   uniforms.uRs.value = state.rs;
   uniforms.uSpin.value = state.spin;
@@ -273,7 +282,7 @@ function syncUniforms() {
   uniforms.uDopplerEnabled.value = state.dopplerEnabled;
   uniforms.uGravRedshiftEnabled.value = state.gravRedshiftEnabled;
   uniforms.uLensingStrength.value = state.lensingStrength;
-  uniforms.uTargetMode.value = state.target === 'm87' ? 1.0 : 0.0;
+  uniforms.uTargetMode.value = p.targetMode !== undefined ? p.targetMode : 1.0;
   uniforms.uColorPalette.value = Number(state.colorPalette);
   uniforms.uMaxSteps.value = Number(state.maxSteps);
   uniforms.uStepSize.value = state.stepSize;
@@ -305,10 +314,18 @@ function updateActiveEquations() {
   activeKeys.add('ehtAngularDiameter');
   // 10. Relativistic Doppler Color Shift: Active in optical band or when Doppler is enabled
   if (state.colorPalette === 1 || state.dopplerEnabled) activeKeys.add('dopplerColorShift');
-  // 11. Synchrotron Beaming: Active in EHT or X-Ray mode
-  if (state.colorPalette === 0 || state.colorPalette === 3) activeKeys.add('synchrotronBeaming');
-  // 12. Earth VLBI Beam Convolution: Active in EHT mode or when EHT blur toggle is on
+  // 11. Synchrotron Beaming: Active in EHT, ngEHT, or X-Ray mode
+  if (state.colorPalette === 0 || state.colorPalette === 3 || state.colorPalette === 5) activeKeys.add('synchrotronBeaming');
+  // 12. Earth VLBI Beam Convolution: Active in EHT mode or when EHT blur is active
   if (state.ehtBeamBlur || state.colorPalette === 0) activeKeys.add('ehtBeamConvolution');
+  // 13. IXPE Synchrotron Magnetic Polarization: Active in IXPE mode
+  if (state.colorPalette === 7) activeKeys.add('ixpePolarization');
+  // 14. Next-Gen EHT 345 GHz Resolution: Active in ngEHT mode or ngEHT optics
+  if (state.colorPalette === 5 || state.opticsModeIndex === 2) activeKeys.add('ngehtResolution');
+  // 15. Space VLBI Earth-Moon Baseline: Active in Space VLBI mode or Space VLBI optics
+  if (state.colorPalette === 6 || state.opticsModeIndex === 1) activeKeys.add('spaceVlbiResolution');
+  // 16. Quasar Eddington Radiation Limit: Active for TON 618
+  if (state.target === 'ton618') activeKeys.add('eddingtonLuminosity');
 
   const count = activeKeys.size;
   if (valActiveEqCount) valActiveEqCount.textContent = `${count}`;
@@ -343,7 +360,10 @@ function updateActiveEquations() {
   let featuredKey = 'shakuraSunyaev';
   let featuredName = 'Shakura-Sunyaev Temperature Field';
 
-  if (state.colorPalette === 1) {
+  if (state.target === 'ton618') {
+    featuredKey = 'eddingtonLuminosity';
+    featuredName = 'TON 618 Hyper-Quasar Eddington Limit';
+  } else if (state.colorPalette === 1) {
     featuredKey = 'dopplerColorShift';
     featuredName = 'Relativistic Doppler Color Shift';
   } else if (state.colorPalette === 0) {
@@ -358,6 +378,15 @@ function updateActiveEquations() {
   } else if (state.colorPalette === 4) {
     featuredKey = 'shakuraSunyaev';
     featuredName = 'Extended Dusty Torus T(r) Profile';
+  } else if (state.colorPalette === 5) {
+    featuredKey = 'ngehtResolution';
+    featuredName = 'ngEHT 345 GHz Sub-mm Diffraction';
+  } else if (state.colorPalette === 6) {
+    featuredKey = 'spaceVlbiResolution';
+    featuredName = 'Space VLBI Sub-Microarcsecond Baseline';
+  } else if (state.colorPalette === 7) {
+    featuredKey = 'ixpePolarization';
+    featuredName = 'IXPE Synchrotron Magnetic Topology';
   }
 
   if (valFeaturedEqName) valFeaturedEqName.textContent = featuredName;
@@ -434,10 +463,38 @@ function switchCameraPreset(key) {
   showToast(`View: ${preset.name}`);
 }
 
+// --- Telescope Optics Mode Switch ---
+function setOpticsMode(index, toast = true) {
+  state.opticsModeIndex = ((index % TELESCOPE_OPTICS_MODES.length) + TELESCOPE_OPTICS_MODES.length) % TELESCOPE_OPTICS_MODES.length;
+  const mode = TELESCOPE_OPTICS_MODES[state.opticsModeIndex];
+  state.ehtBeamBlur = mode.blurRadius > 0;
+  state.ehtBlurRadius = mode.blurRadius;
+  postUniforms.uEHTBeamBlur.value = state.ehtBeamBlur;
+  postUniforms.uBlurRadius.value = state.ehtBlurRadius;
+
+  if (btnEhtBlur) {
+    btnEhtBlur.classList.toggle('active', state.ehtBeamBlur);
+  }
+  if (labelEhtBlur) {
+    labelEhtBlur.textContent = `Optics: ${mode.label.split(' ')[0]}`;
+  }
+  if (badgeOptics) {
+    badgeOptics.textContent = mode.badge;
+    badgeOptics.className = `badge ${state.ehtBeamBlur ? 'warning' : 'on'}`;
+  }
+
+  if (gui) gui.controllersRecursive().forEach((c) => c.updateDisplay());
+  updateActiveEquations();
+  if (toast) {
+    showToast(`🔭 ${mode.badge}`);
+  }
+}
+
 // --- Reset ---
 function resetToDefaults() {
   Object.assign(state, PHYSICS_DEFAULTS);
   state.autoTrackIsco = true;
+  setOpticsMode(0, false);
   switchTarget('m87');
   switchPalette(0, false);
   if (gui) gui.controllersRecursive().forEach((c) => c.updateDisplay());
@@ -461,18 +518,26 @@ function setupGUI() {
   gui.add({ reset: resetToDefaults }, 'reset').name('🔄 Reset Defaults');
 
   const tf = gui.addFolder('Astronomical Target');
-  tf.add(state, 'target', { 'Sgr A* (Milky Way)': 'sgrA', 'M87* (Monster BH)': 'm87' })
-    .name('Black Hole').onChange((v) => switchTarget(v));
-  tf.add(state, 'enableJet').name('Polar Jet').onChange(syncUniforms);
+  tf.add(state, 'target', {
+    'Sgr A* (Milky Way)': 'sgrA',
+    'M87* (Monster BH)': 'm87',
+    'Cygnus X-1 (Stellar Binary)': 'cygX1',
+    'TON 618 (Ultramassive Quasar)': 'ton618',
+    'Gargantua (Extreme Kerr)': 'gargantua',
+  }).name('Black Hole').listen().onChange((v) => switchTarget(v));
+  tf.add(state, 'enableJet').name('Polar Jet').listen().onChange(syncUniforms);
 
   const df = gui.addFolder('Accretion Disk & Sensor');
   df.add(state, 'colorPalette', {
     'EHT 1.3mm Radio (VLBI)': 0,
+    'ngEHT 0.87mm (345 GHz)': 5,
+    'Space VLBI (Earth-Moon)': 6,
+    'NASA IXPE Polarimetry': 7,
     'Relativistic Optical': 1,
     'Thermal Heatmap': 2,
     'X-Ray 0.5-10 keV': 3,
     'Infrared Torus (JWST)': 4,
-  }).name('Spectral Band').onChange((v) => switchPalette(v));
+  }).name('Spectral Band').listen().onChange((v) => switchPalette(v));
   df.add(state, 'diskDensity', 0.2, 3.0, 0.05).name('Gas Density').onChange(syncUniforms);
   df.add(state, 'diskBrightness', 0.5, 5.0, 0.1).name('Radiance').onChange(syncUniforms);
   df.add(state, 'diskInner', 1.0, 8.0, 0.1)
@@ -528,11 +593,13 @@ function setupGUI() {
   gf.close();
 
   const of = gui.addFolder('Observational Optics');
-  of.add(state, 'ehtBeamBlur').name('EHT Beam Blur (20μas)').listen().onChange((v) => {
-    updateEhtBlurUI();
-    showToast(v ? 'EHT 20 μas Earth VLBI Blur ON (Matches Real EHT Photos)' : 'Near-Field Infinite Resolution (Ground Truth)');
-  });
-  of.add(state, 'ehtBlurRadius', 1.0, 10.0, 0.5).name('Beam Blur FWHM').onChange((v) => {
+  of.add(state, 'opticsModeIndex', {
+    'Ground Truth (Infinite Res)': 0,
+    'Space VLBI (1 μas Lunar)': 1,
+    'ngEHT 345GHz (10 μas)': 2,
+    'EHT 1.3mm (20 μas Earth)': 3,
+  }).name('Telescope Beam').listen().onChange((idx) => setOpticsMode(Number(idx)));
+  of.add(state, 'ehtBlurRadius', 0.0, 10.0, 0.2).name('Blur FWHM').listen().onChange((v) => {
     postUniforms.uBlurRadius.value = v;
   });
   of.close();
@@ -555,6 +622,10 @@ function renderLatex() {
     ['formula-doppler-shift', 'dopplerColorShift'],
     ['formula-synchrotron', 'synchrotronBeaming'],
     ['formula-eht-convolution', 'ehtBeamConvolution'],
+    ['formula-ixpe', 'ixpePolarization'],
+    ['formula-ngeht', 'ngehtResolution'],
+    ['formula-space-vlbi', 'spaceVlbiResolution'],
+    ['formula-eddington', 'eddingtonLuminosity'],
   ];
   for (const [elId, key] of pairs) {
     const el = document.getElementById(elId);
@@ -693,28 +764,11 @@ function setupEvents() {
     });
   }
 
-  // EHT Beam Blur button
-  function updateEhtBlurUI() {
-    postUniforms.uEHTBeamBlur.value = state.ehtBeamBlur;
-    if (btnEhtBlur) {
-      btnEhtBlur.classList.toggle('active', state.ehtBeamBlur);
-      if (labelEhtBlur) labelEhtBlur.textContent = state.ehtBeamBlur ? 'EHT Blur: ON' : 'EHT Blur (20μas)';
-    }
-    if (badgeOptics) {
-      badgeOptics.textContent = state.ehtBeamBlur ? 'Optics: 20 μas Earth VLBI' : 'Optics: Infinite Res';
-      badgeOptics.className = `badge ${state.ehtBeamBlur ? 'warning' : 'on'}`;
-    }
-    if (gui) gui.controllersRecursive().forEach((c) => c.updateDisplay());
-    updateActiveEquations();
-  }
-
+  // Telescope optics mode cycle button (Ground Truth -> Space VLBI -> ngEHT -> EHT 1.3mm)
   if (btnEhtBlur) {
     btnEhtBlur.addEventListener('click', () => {
-      state.ehtBeamBlur = !state.ehtBeamBlur;
-      updateEhtBlurUI();
-      showToast(state.ehtBeamBlur 
-        ? '📡 EHT 20 μas Earth Beam Blur ON (Matches Real EHT Photos)' 
-        : '🔭 Near-Field Infinite Resolution (General Relativity Ground Truth)');
+      const nextIdx = (state.opticsModeIndex + 1) % TELESCOPE_OPTICS_MODES.length;
+      setOpticsMode(nextIdx);
     });
   }
 

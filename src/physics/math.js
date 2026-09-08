@@ -38,7 +38,65 @@ export const TARGET_PROFILES = {
     cameraPos: [-12.5, 3.2, 17.0],
     description: 'Monster supermassive black hole in galaxy M87. Features a 5,000 light-year relativistic polar plasma jet.',
   },
+  cygX1: {
+    id: 'cygX1',
+    name: 'Cygnus X-1 (Stellar-Mass Binary)',
+    massSolar: 21.2,          // 21.2 Solar Masses
+    distanceKpc: 2.22,        // 7,240 light-years
+    angularDiameterMuAs: 0.0001,
+    rsKm: 62.6,               // 62.6 km radius
+    spin: 0.998,              // Extreme near-maximal Kerr spin
+    diskSpeed: 2.6,           // Blistering sub-second orbit (~1.5 ms at ISCO)
+    diskDensity: 1.5,
+    diskBrightness: 2.7,
+    hasJet: true,             // Relativistic microquasar jet
+    colorPalette: 3,          // X-Ray high energy
+    targetMode: 2.0,
+    cameraPos: [8.5, 3.8, 14.5],
+    description: 'First confirmed black hole in history. Stellar-mass black hole feeding on a blue supergiant companion star (HDE 226868).',
+  },
+  ton618: {
+    id: 'ton618',
+    name: 'TON 618 (Ultramassive Quasar)',
+    massSolar: 6.6e10,        // 66 Billion Solar Masses
+    distanceMpc: 5580.0,      // 18.2 Billion light-years (z = 2.219)
+    angularDiameterMuAs: 0.002,
+    rsKm: 3.9e11,             // 390 Billion km (~2,600 AU)
+    spin: 0.96,
+    diskSpeed: 0.4,
+    diskDensity: 1.9,
+    diskBrightness: 3.4,
+    hasJet: true,             // Blinding hyper-relativistic quasar beam
+    colorPalette: 0,
+    targetMode: 3.0,
+    cameraPos: [-16.0, 5.0, 22.0],
+    description: 'One of the most massive black holes known. Luminous hyper-quasar shining with 140 trillion times the luminosity of the Sun.',
+  },
+  gargantua: {
+    id: 'gargantua',
+    name: 'Gargantua (Extreme Kerr - Interstellar)',
+    massSolar: 1.0e8,         // 100 Million Solar Masses
+    distanceKpc: 1000.0,
+    angularDiameterMuAs: 15.0,
+    rsKm: 2.95e8,             // 295 Million km (~2 AU)
+    spin: 0.9998,             // Thorne theoretical maximal limit
+    diskSpeed: 0.9,
+    diskDensity: 1.1,
+    diskBrightness: 2.3,
+    hasJet: false,
+    colorPalette: 1,          // Relativistic optical golden spectrum
+    targetMode: 4.0,
+    cameraPos: [-12.5, 2.5, 17.5],
+    description: 'Rapidly spinning supermassive black hole with an ultra-thin luminous disk and extreme gravitational time dilation (1 hour = 7 years).',
+  },
 };
+
+export const TELESCOPE_OPTICS_MODES = [
+  { id: 'none', label: 'Ground Truth (Inf Res)', blurRadius: 0.0, badge: 'Optics: Infinite Res' },
+  { id: 'spaceVLBI', label: 'Space VLBI (1 μas)', blurRadius: 1.2, badge: 'Optics: 1 μas Lunar VLBI' },
+  { id: 'ngEHT', label: 'ngEHT 345GHz (10 μas)', blurRadius: 2.8, badge: 'Optics: 10 μas ngEHT' },
+  { id: 'eht', label: 'EHT 1.3mm (20 μas)', blurRadius: 5.5, badge: 'Optics: 20 μas Earth VLBI' },
+];
 
 export const PHYSICS_DEFAULTS = {
   target: 'm87',
@@ -64,7 +122,8 @@ export const PHYSICS_DEFAULTS = {
   timeSpeed: 1.0,
   currentTime4D: 0.0,
   camFOV: 50,
-  ehtBeamBlur: false, // 20 microarcsecond EHT telescope resolution limit beam convolution
+  opticsModeIndex: 0,  // 0: Infinite Res, 1: Space VLBI, 2: ngEHT, 3: EHT 20μas
+  ehtBeamBlur: false,
   ehtBlurRadius: 5.5,
 };
 
@@ -113,6 +172,33 @@ export const COLOR_PALETTES = [
     instrument: 'JWST NIRCam / VLT GRAVITY',
     physics: 'Penetrates interstellar dust; reveals extended outer accretion torus & spiral density feeding streams.',
     beamingLaw: 'Dust Penetration & Extended Torus (r <= 22M)',
+  },
+  {
+    name: 'Next-Gen EHT 0.87mm (345 GHz)',
+    shortName: 'ngEHT 0.87mm',
+    value: 5,
+    wavelength: '0.87 mm (345 GHz)',
+    instrument: 'Next-Generation EHT + Space Nodes',
+    physics: 'High-frequency sub-mm array with 2× sharper angular resolution (10 μas), resolving the thin n=1 photon sub-ring.',
+    beamingLaw: 'High-Frequency Sub-mm Resolution (theta ~ 10 μas)',
+  },
+  {
+    name: 'Space VLBI (Earth-Moon Baseline)',
+    shortName: 'Space VLBI',
+    value: 6,
+    wavelength: 'Interferometric Synthesis',
+    instrument: 'Lunar Orbital Radio Observatory (384,000 km baseline)',
+    physics: 'Sub-microarcsecond imaging (1 μas) breaking through Earth atmosphere to reveal individual second-order photon loops (n=2).',
+    beamingLaw: 'Ultra-Fine Baseline Resolution (theta <= 1 μas)',
+  },
+  {
+    name: 'Magnetic Field Polarimetry',
+    shortName: 'IXPE Polarimetry',
+    value: 7,
+    wavelength: '2 - 8 keV Polarized X-Rays',
+    instrument: 'NASA IXPE (Imaging X-ray Polarimetry Explorer)',
+    physics: 'Maps synchrotron polarization vector angles and helical magnetic field topology powering the Blandford-Znajek relativistic jets.',
+    beamingLaw: 'Linear Polarization EVPA Vector Field',
   },
 ];
 export const SPECTRAL_REGIMES = COLOR_PALETTES;
@@ -210,4 +296,8 @@ export const LATEX_FORMULAS = {
   synchrotronBeaming: String.raw`I_\nu(\nu) = \delta^{3+\alpha} I_{0,\nu}\left(\frac{\nu}{\delta}\right) \quad (\text{EHT 1.3mm \& X-Ray Corona Beaming})`,
   ehtAngularDiameter: String.raw`\theta_{\text{EHT}} = \frac{2\, b_{\text{crit}}}{D} = \frac{3\sqrt{3}\, G M}{c^2 D} \approx \begin{cases} 51.8\;\mu\text{as} & \text{Sgr A*} \\ 42.0\;\mu\text{as} & \text{M87*} \end{cases}`,
   ehtBeamConvolution: String.raw`\theta_{\text{beam}} \approx 1.22 \frac{\lambda}{D_{\text{Earth}}} \approx 20\text{--}25\,\mu\text{as}, \quad I_{\text{observed}}(\alpha, \beta) = [I_{\text{GR}} * \mathcal{G}_{\text{beam}}](\alpha, \beta)`,
+  ixpePolarization: String.raw`\Pi_{\text{syn}} = \frac{p+1}{p + 7/3} \approx 72\%, \quad \chi_{\text{EVPA}} = \frac{1}{2}\arctan\left(\frac{U}{Q}\right) \quad (\text{IXPE Magnetic Topology})`,
+  ngehtResolution: String.raw`\theta_{\text{ngEHT}} \approx 1.22 \frac{\lambda_{\text{345 GHz}}}{D_{\text{Earth}}} \approx 10\ \mu\text{as} \quad (\text{Next-Gen EHT Resolves Photon Ring } n=1)`,
+  spaceVlbiResolution: String.raw`\theta_{\text{Space-VLBI}} \approx 1.22 \frac{\lambda}{D_{\text{Earth-Moon}}} \approx \frac{1.3\text{ mm}}{384,000\text{ km}} \approx 0.85\ \mu\text{as} \quad (\text{Photon Loop } n=2)`,
+  eddingtonLuminosity: String.raw`L_{\text{Edd}} = \frac{4\pi G M m_p c}{\sigma_T} \approx 1.26 \times 10^{31} \left(\frac{M}{M_\odot}\right)\text{ W} \approx 8.3 \times 10^{41}\text{ W} \quad (\text{TON 618 Hyper-Quasar})`,
 };

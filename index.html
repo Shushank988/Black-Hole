@@ -44,12 +44,18 @@
         <!-- Astronomical Target, Palette, and Preset Bars -->
         <div class="header-center-pills">
           <div class="target-bar" id="target-bar">
-            <button class="target-pill active" data-target="sgrA" title="Sagittarius A* (Milky Way Center)">Sgr A*</button>
-            <button class="target-pill" data-target="m87" title="M87* (Messier 87 Monster BH with Polar Jet)">M87*</button>
+            <button class="target-pill" data-target="sgrA" title="Sagittarius A* (Milky Way Center)">Sgr A*</button>
+            <button class="target-pill active" data-target="m87" title="M87* (Messier 87 Monster BH with Polar Jet)">M87*</button>
+            <button class="target-pill" data-target="cygX1" title="Cygnus X-1 (Stellar-Mass Binary Microquasar)">Cyg X-1</button>
+            <button class="target-pill" data-target="ton618" title="TON 618 (Hyper-Luminous Ultramassive Quasar)">TON 618</button>
+            <button class="target-pill" data-target="gargantua" title="Gargantua (Extreme Kerr - Interstellar)">Gargantua</button>
           </div>
 
           <div class="palette-bar" id="palette-bar">
             <button class="palette-pill active" data-palette="0" title="Event Horizon Telescope (1.3 mm Sub-mm Radio Synchrotron)">EHT 1.3mm</button>
+            <button class="palette-pill" data-palette="5" title="Next-Gen EHT 0.87mm (345 GHz High-Frequency Sub-mm VLBI)">ngEHT 345GHz</button>
+            <button class="palette-pill" data-palette="6" title="Space VLBI Earth-Moon Baseline (Sub-Microarcsecond Resolution)">Space VLBI</button>
+            <button class="palette-pill" data-palette="7" title="NASA IXPE Polarimetry (Magnetic Field Streamlines)">IXPE Pol.</button>
             <button class="palette-pill" data-palette="1" title="Relativistic Optical Visible Spectrum (Doppler Wavelength Shift)">Optical</button>
             <button class="palette-pill" data-palette="2" title="Shakura-Sunyaev Thermodynamic Effective Temperature with Isothermal Contours">Thermal</button>
             <button class="palette-pill" data-palette="3" title="Chandra / NuSTAR High-Energy X-Ray (0.5-10 keV Corona & Inner ISCO)">X-Ray</button>
@@ -74,9 +80,9 @@
             <svg viewBox="0 0 24 24"><path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/></svg>
             <span>Reset</span>
           </button>
-          <button class="btn-glass" id="btn-eht-blur" title="Toggle Earth EHT 20 μas Telescope Resolution Limit Blur (See Google/NASA Donut vs Ground Truth)">
+          <button class="btn-glass" id="btn-eht-blur" title="Cycle Observing Scope Optics (Infinite Res -> Space VLBI -> ngEHT -> EHT 20μas)">
             <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
-            <span id="label-eht-blur">EHT Blur (20μas)</span>
+            <span id="label-eht-blur">Optics: Ground Truth</span>
           </button>
           <button class="btn-glass active" id="btn-orbit-toggle" title="Toggle 360° Continuous Auto-Orbit">
             <svg id="orbit-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
@@ -197,7 +203,7 @@
           <div>
             <h2>General Relativity Kerr Spacetime & EHT Equations</h2>
             <div class="math-filter-bar">
-              <button class="math-filter-pill active" id="filter-eq-all" data-filter="all">All Equations (12)</button>
+              <button class="math-filter-pill active" id="filter-eq-all" data-filter="all">All Equations (16)</button>
               <button class="math-filter-pill" id="filter-eq-active" data-filter="active">● Running Now (<span id="count-modal-active">7</span>)</button>
             </div>
           </div>
@@ -291,7 +297,7 @@
               <span class="eq-status-badge idle" id="badge-eq-doppler-shift">IDLE</span>
             </div>
             <div class="formula-render" id="formula-doppler-shift"></div>
-            <p class="formula-desc">In the optical band, relativistic orbital velocity transforms emission frequency directly: Approaching gas shifts into blue/UV (\(\nu_{\text{obs}} > \nu_{\text{emit}}\)), while receding gas drops into deep red/infrared.</p>
+            <p class="formula-desc">In the optical band, relativistic orbital velocity transforms emission frequency directly: Approaching gas shifts into blue/UV (&nu;<sub>obs</sub> &gt; &nu;<sub>emit</sub>), while receding gas drops into deep red/infrared.</p>
           </div>
 
           <div class="formula-card is-running" id="card-eq-synchrotron" data-eq="synchrotronBeaming">
@@ -300,7 +306,7 @@
               <span class="eq-status-badge running" id="badge-eq-synchrotron">● RUNNING</span>
             </div>
             <div class="formula-render" id="formula-synchrotron"></div>
-            <p class="formula-desc">In radio (EHT 1.3mm) and X-ray corona bands, non-thermal synchrotron radiation beams as \(I_\nu \propto \delta^{3+\alpha}\), boosting the approaching horn by factors of 10x to 100x!</p>
+            <p class="formula-desc">In radio (EHT 1.3mm) and X-ray corona bands, non-thermal synchrotron radiation beams as <em>I</em><sub>&nu;</sub> &prop; &delta;<sup>3+&alpha;</sup>, boosting the approaching horn by factors of 10&times; to 100&times;!</p>
           </div>
 
           <div class="formula-card is-running" id="card-eq-eht-convolution" data-eq="ehtBeamConvolution">
@@ -309,7 +315,43 @@
               <span class="eq-status-badge running" id="badge-eq-eht-convolution">● EHT OBSERVATION</span>
             </div>
             <div class="formula-render" id="formula-eht-convolution"></div>
-            <p class="formula-desc">Why do Google/NASA press photos look like a blurry orange donut? The Event Horizon Telescope synthesizes an Earth-diameter virtual aperture (\(D \approx 10^4\text{ km}\)) at \(\lambda = 1.3\text{ mm}\). By the diffraction limit \(\theta \approx 1.22 \lambda / D\), its angular resolution is limited to \(\sim 20\ \mu\text{as}\). Because the shadow ring is only \(\sim 45\ \mu\text{as}\) across, Earth's telescope beam naturally blurs the razor-sharp photon ring into the famous fuzzy donut! Toggle "EHT Blur" on the HUD to see Earth's telescope transform this exact simulation into the real EHT photograph.</p>
+            <p class="formula-desc">Why do Google/NASA press photos look like a blurry orange donut? The Event Horizon Telescope synthesizes an Earth-diameter virtual aperture (<em>D</em> &approx; 10,000 km) at &lambda; = 1.3 mm. By the diffraction limit &theta; &approx; 1.22 &lambda; / <em>D</em>, its angular resolution is limited to ~20 &mu;as. Because the shadow ring is only ~45 &mu;as across, Earth's telescope beam naturally blurs the razor-sharp photon ring into the famous fuzzy donut! Toggle "Optics" on the HUD to see Earth's telescope transform this exact simulation into the real EHT photograph.</p>
+          </div>
+
+          <div class="formula-card" id="card-eq-ixpe" data-eq="ixpePolarization">
+            <div class="card-title-row">
+              <h4>13. Synchrotron Magnetic Linear Polarization (IXPE)</h4>
+              <span class="eq-status-badge idle" id="badge-eq-ixpe">IDLE</span>
+            </div>
+            <div class="formula-render" id="formula-ixpe"></div>
+            <p class="formula-desc">In the IXPE polarimetry band, non-thermal synchrotron emission has up to ~72% linear polarization. Electric Vector Position Angles (EVPA) trace helical magnetic field topologies threading the ergosphere and launching relativistic jets.</p>
+          </div>
+
+          <div class="formula-card" id="card-eq-ngeht" data-eq="ngehtResolution">
+            <div class="card-title-row">
+              <h4>14. Next-Gen EHT (345 GHz) Sub-Millimeter Resolution</h4>
+              <span class="eq-status-badge idle" id="badge-eq-ngeht">IDLE</span>
+            </div>
+            <div class="formula-render" id="formula-ngeht"></div>
+            <p class="formula-desc">By moving up to 345 GHz (&lambda; = 0.87 mm) with orbiting space satellite dishes, ngEHT doubles angular resolution to ~10 &mu;as, separating the razor-thin <em>n</em>=1 photon sub-ring from turbulent accretion disk emission.</p>
+          </div>
+
+          <div class="formula-card" id="card-eq-space-vlbi" data-eq="spaceVlbiResolution">
+            <div class="card-title-row">
+              <h4>15. Space VLBI Earth-Moon Sub-Microarcsecond Diffraction</h4>
+              <span class="eq-status-badge idle" id="badge-eq-space-vlbi">IDLE</span>
+            </div>
+            <div class="formula-render" id="formula-space-vlbi"></div>
+            <p class="formula-desc">A lunar orbital radio antenna provides an unprecedented baseline of 384,000 km, reaching sub-microarcsecond resolution (&le; 0.85 &mu;as) to resolve individual second-order photon loops (<em>n</em>=2) orbiting the event horizon.</p>
+          </div>
+
+          <div class="formula-card" id="card-eq-eddington" data-eq="eddingtonLuminosity">
+            <div class="card-title-row">
+              <h4>16. Quasar Eddington Radiation Limit (TON 618)</h4>
+              <span class="eq-status-badge idle" id="badge-eq-eddington">IDLE</span>
+            </div>
+            <div class="formula-render" id="formula-eddington"></div>
+            <p class="formula-desc">The maximum luminosity an accretion disk can radiate before outward radiation pressure halts gravitational infall. For TON 618 (66 billion solar masses), the Eddington limit is a staggering 8.3 &times; 10<sup>41</sup> W (140 trillion solar luminosities).</p>
           </div>
         </div>
       </div>

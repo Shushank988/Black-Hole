@@ -175,12 +175,57 @@ canvas {
   font-weight: 700;
   box-shadow: 0 0 12px rgba(0, 229, 255, 0.4);
 }
+.target-pill[data-target="sgrA"].active {
+  background: linear-gradient(135deg, #00e5ff 0%, #0072ff 100%);
+  color: #000;
+  box-shadow: 0 0 12px rgba(0, 229, 255, 0.5);
+}
+.target-pill[data-target="m87"].active {
+  background: linear-gradient(135deg, #ff9100 0%, #ff3d00 100%);
+  color: #000;
+  box-shadow: 0 0 12px rgba(255, 145, 0, 0.5);
+}
+.target-pill[data-target="cygX1"].active {
+  background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+  color: #000;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.5);
+}
+.target-pill[data-target="ton618"].active {
+  background: linear-gradient(135deg, #b026ff 0%, #f72585 100%);
+  color: #fff;
+  box-shadow: 0 0 12px rgba(247, 37, 133, 0.5);
+}
+.target-pill[data-target="gargantua"].active {
+  background: linear-gradient(135deg, #ffd166 0%, #e07a5f 100%);
+  color: #000;
+  box-shadow: 0 0 12px rgba(255, 209, 102, 0.5);
+}
 
 .palette-pill.active {
   background: linear-gradient(135deg, #ffaa00 0%, #ff5500 100%);
   color: #000;
   font-weight: 700;
   box-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+}
+.palette-pill[data-palette="0"].active {
+  background: linear-gradient(135deg, #ffaa00 0%, #ff5500 100%);
+  color: #000;
+  box-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
+}
+.palette-pill[data-palette="5"].active {
+  background: linear-gradient(135deg, #00f5d4 0%, #00bbf9 100%);
+  color: #000;
+  box-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
+}
+.palette-pill[data-palette="6"].active {
+  background: linear-gradient(135deg, #7209b7 0%, #4361ee 100%);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(114, 9, 183, 0.5);
+}
+.palette-pill[data-palette="7"].active {
+  background: linear-gradient(135deg, #38ef7d 0%, #11998e 100%);
+  color: #000;
+  box-shadow: 0 0 10px rgba(56, 239, 125, 0.5);
 }
 .palette-pill[data-palette="1"].active {
   background: linear-gradient(135deg, #ff3300 0%, #00b4d8 100%);
