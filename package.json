@@ -1,0 +1,32 @@
+{
+  "name": "black-hole-simulation",
+  "version": "1.0.0",
+  "description": "Interactive real-time 4D Kerr General Relativity Black Hole simulation (Sagittarius A* & M87*) powered by Three.js and GLSL geodesic raymarching.",
+  "license": "MIT",
+  "type": "module",
+  "keywords": [
+    "black-hole",
+    "general-relativity",
+    "webgl",
+    "threejs",
+    "glsl",
+    "raymarching",
+    "astrophysics",
+    "kerr-metric",
+    "m87",
+    "sagittarius-a"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.2.2"
+  },
+  "dependencies": {
+    "katex": "^0.18.7",
+    "lil-gui": "^0.21.0",
+    "three": "^0.185.1"
+  }
+}

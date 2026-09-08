@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>4D Black Hole Simulation — Sagittarius A* & M87* (General Relativity)</title>
+    <meta name="description" content="Real-time 4D Kerr General Relativity Black Hole simulation of Sagittarius A* and M87*. Features geodesic raymarching, frame-dragging, Doppler beaming, gravitational redshift, and multi-spectral accretion disks." />
+    <meta name="theme-color" content="#06070a" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="4D Spacetime Lab — Black Hole GR Simulation" />
+    <meta property="og:description" content="Interactive GPU raymarching simulation of Sagittarius A* & M87* with Kerr spacetime physics, accretion disk thermodynamics, and multi-spectral imaging." />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="4D Spacetime Lab — Black Hole GR Simulation" />
+    <meta name="twitter:description" content="Interactive GPU raymarching simulation of Sagittarius A* & M87* with Kerr spacetime physics, accretion disk thermodynamics, and multi-spectral imaging." />
+    <meta name="twitter:image" content="/og-image.png" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <!-- 3D WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Glass Overlay -->
+    <div id="ui-overlay">
+      <!-- Top Navigation Header -->
+      <header class="header-bar">
+        <div class="brand-container">
+          <div class="brand-logo"></div>
+          <div class="brand-title">
+            <h1>4D Spacetime Lab</h1>
+            <p id="target-title-desc">Sagittarius A* & M87* GR Engine</p>
+          </div>
+        </div>
+
+        <!-- Astronomical Target, Palette, and Preset Bars -->
+        <div class="header-center-pills">
+          <div class="target-bar" id="target-bar">
+            <button class="target-pill active" data-target="sgrA" title="Sagittarius A* (Milky Way Center)">Sgr A*</button>
+            <button class="target-pill" data-target="m87" title="M87* (Messier 87 Monster BH with Polar Jet)">M87*</button>
+          </div>
+
+          <div class="palette-bar" id="palette-bar">
+            <button class="palette-pill active" data-palette="0" title="Event Horizon Telescope (1.3 mm Sub-mm Radio Synchrotron)">EHT 1.3mm</button>
+            <button class="palette-pill" data-palette="1" title="Relativistic Optical Visible Spectrum (Doppler Wavelength Shift)">Optical</button>
+            <button class="palette-pill" data-palette="2" title="Shakura-Sunyaev Thermodynamic Effective Temperature with Isothermal Contours">Thermal</button>
+            <button class="palette-pill" data-palette="3" title="Chandra / NuSTAR High-Energy X-Ray (0.5-10 keV Corona & Inner ISCO)">X-Ray</button>
+            <button class="palette-pill" data-palette="4" title="James Webb (JWST) Infrared Dust-Penetrating Extended Torus">Infrared</button>
+          </div>
+
+          <div class="preset-bar" id="preset-bar">
+            <button class="preset-pill active" data-preset="interstellar">Cinematic</button>
+            <button class="preset-pill" data-preset="polar">Polar</button>
+            <button class="preset-pill" data-preset="photonRing">Photon Ring</button>
+            <button class="preset-pill" data-preset="eclipse">Profile</button>
+          </div>
+        </div>
+
+        <!-- Quick Header Action Buttons -->
+        <div class="header-actions">
+          <button class="btn-glass" id="btn-math" title="View Kerr Spacetime General Relativity Equations">
+            <svg viewBox="0 0 24 24"><path d="M19,3H5C3.9,3 3,3.9 3,5V19C3,20.1 3.9,21 5,21H19C20.1,21 21,20.1 21,19V5C21,3.9 20.1,3 19,3M19,19H5V5H19V19M6.5,7.5H11.5V9H9V15H7.5V9H6.5V7.5M13,7.5H17.5V9H15V10.5H17V12H15V13.5H17.5V15H13V7.5Z"/></svg>
+            <span>GR Math</span>
+          </button>
+          <button class="btn-glass" id="btn-reset" title="Reset All Settings to Scientific Defaults">
+            <svg viewBox="0 0 24 24"><path d="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"/></svg>
+            <span>Reset</span>
+          </button>
+          <button class="btn-glass active" id="btn-orbit-toggle" title="Toggle 360° Continuous Auto-Orbit">
+            <svg id="orbit-icon" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,6A6,6 0 0,0 6,12A6,6 0 0,0 12,18A6,6 0 0,0 18,12A6,6 0 0,0 12,6M12,8A4,4 0 0,1 16,12A4,4 0 0,1 12,16A4,4 0 0,1 8,12A4,4 0 0,1 12,8Z"/></svg>
+            <span id="orbit-label">360° Orbit</span>
+          </button>
+          <button class="btn-glass" id="btn-zen" title="Zen Mode: Hide HUD for Full 360° View (or Double-Tap Canvas)">
+            <svg viewBox="0 0 24 24"><path d="M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,4.5C17,4.5 21.27,7.61 23,12C21.27,16.39 17,19.5 12,19.5C7,19.5 2.73,16.39 1,12C2.73,7.61 7,4.5 12,4.5M3.18,12C4.83,15.36 8.24,17.5 12,17.5C15.76,17.5 19.17,15.36 20.82,12C19.17,8.64 15.76,6.5 12,6.5C8.24,6.5 4.83,8.64 3.18,12Z"/></svg>
+            <span>Zen View</span>
+          </button>
+          <button class="btn-glass" id="btn-snapshot" title="Take Screenshot">
+            <svg viewBox="0 0 24 24"><path d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 12,9Z"/></svg>
+            <span>Snapshot</span>
+          </button>
+          <button class="btn-glass" id="btn-pause" title="Pause / Resume Rotation & Time">
+            <svg id="pause-icon" viewBox="0 0 24 24"><path d="M14,19H18V5H14M6,19H10V5H6V19Z"/></svg>
+            <span id="pause-label">Pause</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Bottom Layout Container -->
+      <div class="bottom-container">
+        <!-- Live Physics Telemetry HUD -->
+        <aside class="telemetry-panel">
+          <div class="panel-header">
+            <h3><span class="live-indicator"></span> Realtime Telemetry</h3>
+            <span id="fps-counter" style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--accent-gold); font-weight: 700;">60 FPS</span>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-label">Target Mass (M_sun)</span>
+              <span class="metric-value" id="val-mass-solar">4.15 x 10^6</span>
+              <span class="metric-sub" id="val-target-name">Sagittarius A*</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Kerr Horizon (r_+)</span>
+              <span class="metric-value" id="val-rs-km">1.23 x 10^7 km</span>
+              <span class="metric-sub" id="val-ergo-km">Ergo r_E: 1.23 x 10^7 km</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Kerr Spin (a*)</span>
+              <span class="metric-value" id="val-spin">0.90</span>
+              <span class="metric-sub" id="val-frame-drag">Frame Dragging ON</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">ISCO Orbit & Speed</span>
+              <span class="metric-value" id="val-visco">57.7% c</span>
+              <span class="metric-sub" id="val-isco-radius">r_ISCO: 2.32 M</span>
+            </div>
+          </div>
+
+          <div class="status-row">
+            <div class="badge on" id="badge-target">Target: Sgr A*</div>
+            <div class="badge on" id="badge-spectral">Band: EHT 1.3mm</div>
+            <div class="badge on" id="badge-jet">Polar Jet: OFF</div>
+            <div class="badge on" id="badge-doppler">Doppler: ON</div>
+          </div>
+
+          <div class="spectral-bar-desc" id="spectral-desc-box">
+            <div class="spectral-lambda-row">
+              <span class="spectral-tag">BAND</span>
+              <span id="val-spectral-lambda">1.3 mm (230 GHz) — VLBI</span>
+            </div>
+            <div class="spectral-phys-desc" id="val-spectral-desc">Sub-mm synchrotron emission piercing dust; highlights photon ring & shadow silhouette.</div>
+          </div>
+
+          <!-- Live Equation Inspector Strip -->
+          <div class="live-equation-strip" id="live-equation-strip" title="Click to view all active General Relativity equations">
+            <div class="equation-strip-header">
+              <div class="eq-header-left">
+                <span class="eq-live-dot"></span>
+                <span class="eq-header-title"><span id="val-active-eq-count">7</span> Active GR Equations</span>
+              </div>
+              <button class="eq-view-all-btn" id="btn-inspect-math" title="Inspect Active Equations">Inspect &rarr;</button>
+            </div>
+            <div class="eq-name-tag" id="val-featured-eq-name">Shakura-Sunyaev Temperature Field</div>
+          </div>
+        </aside>
+
+        <!-- 4D Time Scrubbing Timeline Bar -->
+        <div class="time-scrubber-panel">
+          <button class="btn-glass" id="btn-time-play" style="padding: 4px 8px;">
+            <svg id="time-play-icon" viewBox="0 0 24 24" style="width: 14px; height: 14px;"><path d="M14,19H18V5H14M6,19H10V5H6V19Z"/></svg>
+          </button>
+          <span class="time-label" id="val-time-display">t: 0.0s / 120s</span>
+          <input type="range" class="time-slider" id="time-slider" min="0" max="120" step="0.1" value="0">
+          
+          <div class="speed-group">
+            <button class="speed-btn" data-speed="0.5">0.5x</button>
+            <button class="speed-btn active" data-speed="1.0">1x</button>
+            <button class="speed-btn" data-speed="2.0">2x</button>
+            <button class="speed-btn" data-speed="4.0">4x</button>
+          </div>
+        </div>
+
+        <!-- Right Side: lil-gui target insertion point -->
+        <div id="gui-container" class="gui-wrapper"></div>
+      </div> <!-- Closes .bottom-container -->
+    </div> <!-- Closes #ui-overlay -->
+
+    <!-- Floating Zen Mode Restore Button -->
+    <button class="btn-zen-restore hidden" id="btn-zen-restore" title="Restore Controls">
+      <svg viewBox="0 0 24 24"><path d="M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z"/></svg>
+      <span>Controls</span>
+    </button>
+
+    <!-- Touch 360 Interaction Guide Pill -->
+    <div class="touch-hint" id="touch-hint">
+      <span>👆 Drag to rotate 360° • Pinch to zoom • Double-tap for Zen mode</span>
+    </div>
+
+    <!-- General Relativity Kerr & EHT Equations Modal -->
+    <div class="modal-backdrop" id="math-modal">
+      <div class="modal-window">
+        <div class="modal-header">
+          <div>
+            <h2>General Relativity Kerr Spacetime & EHT Equations</h2>
+            <div class="math-filter-bar">
+              <button class="math-filter-pill active" id="filter-eq-all" data-filter="all">All Equations (11)</button>
+              <button class="math-filter-pill" id="filter-eq-active" data-filter="active">● Running Now (<span id="count-modal-active">7</span>)</button>
+            </div>
+          </div>
+          <button class="modal-close" id="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="formula-card is-running" id="card-eq-kerr" data-eq="kerrMetric">
+            <div class="card-title-row">
+              <h4>1. Kerr Metric Tensor (Boyer-Lindquist Coordinates)</h4>
+              <span class="eq-status-badge running" id="badge-eq-kerr">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-kerr"></div>
+            <p class="formula-desc">Describes exact spacetime geometry around a spinning black hole with mass \(M\) and spin angular momentum \(a^*\). Describes frame dragging and ergosphere deformation.</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-framedrag" data-eq="frameDragging">
+            <div class="card-title-row">
+              <h4>2. Kerr Frame Dragging Angular Velocity</h4>
+              <span class="eq-status-badge running" id="badge-eq-framedrag">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-framedrag"></div>
+            <p class="formula-desc">Spacetime itself is dragged around by the spinning black hole. Objects inside the ergosphere are forced to rotate in the direction of black hole spin.</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-kerr-isco" data-eq="kerrIsco">
+            <div class="card-title-row">
+              <h4>3. Kerr Innermost Stable Circular Orbit (ISCO)</h4>
+              <span class="eq-status-badge running" id="badge-eq-kerr-isco">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-kerr-isco"></div>
+            <p class="formula-desc">For non-spinning Schwarzschild black holes, \(r_{\text{ISCO}} = 6 M\). For maximally spinning Kerr black holes (\(a^* \to 0.998\)), the ISCO moves inward to \(r_{\text{ISCO}} \to 1 M\)!</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-ergosphere" data-eq="ergosphere">
+            <div class="card-title-row">
+              <h4>4. Kerr Ergosphere & Outer Horizon</h4>
+              <span class="eq-status-badge running" id="badge-eq-ergosphere">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-ergosphere"></div>
+            <p class="formula-desc">The ergosphere boundary \(r_E(\theta)\) touches the outer event horizon \(r_+\) at the poles and bulges outward at the equator to \(2M\). In this region, spacetime drags matter faster than light!</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-lensethirring" data-eq="lenseThirring">
+            <div class="card-title-row">
+              <h4>5. Lense-Thirring Geodesic Deflection Force</h4>
+              <span class="eq-status-badge running" id="badge-eq-lensethirring">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-lensethirring"></div>
+            <p class="formula-desc">Spin-orbit coupling produces a lateral force on light rays, making prograde rays experience stronger deflection than retrograde rays, bending the shadow into a characteristic asymmetric D-shape.</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-redshift" data-eq="gravitationalRedshift">
+            <div class="card-title-row">
+              <h4>6. Gravitational Time Dilation & Redshift</h4>
+              <span class="eq-status-badge running" id="badge-eq-redshift">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-redshift"></div>
+            <p class="formula-desc">Clocks near the event horizon run infinitely slow relative to distant observers. Light emitted close to \(r_s\) loses energy, shifting toward infinite redshift.</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-shakura" data-eq="shakuraSunyaev">
+            <div class="card-title-row">
+              <h4>7. Shakura-Sunyaev Accretion Disk Profile</h4>
+              <span class="eq-status-badge running" id="badge-eq-shakura">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-shakura"></div>
+            <p class="formula-desc">Standard thin accretion disk radiative temperature profile \(T(r) \propto r^{-3/4}\) with zero-torque boundary condition at the innermost stable circular orbit \(r_{\text{in}} = r_{\text{ISCO}}\).</p>
+          </div>
+
+          <div class="formula-card" id="card-eq-blandford" data-eq="blandfordZnajek">
+            <div class="card-title-row">
+              <h4>8. M87* Blandford-Znajek Relativistic Jet Power</h4>
+              <span class="eq-status-badge idle" id="badge-eq-blandford">IDLE (Jet OFF)</span>
+            </div>
+            <div class="formula-render" id="formula-blandford"></div>
+            <p class="formula-desc">Extracts rotational energy from a spinning Kerr black hole via magnetic field lines, launching collimated plasma jets accelerating to \(>0.99 c\)!</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-eht" data-eq="ehtAngularDiameter">
+            <div class="card-title-row">
+              <h4>9. Event Horizon Telescope (EHT) Angular Diameter</h4>
+              <span class="eq-status-badge running" id="badge-eq-eht">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-eht"></div>
+            <p class="formula-desc">Observed shadow size on Earth: Sagittarius A* subtends \(51.8\ \mu\text{as}\), while M87* subtends \(42.0\ \mu\text{as}\) across 55 million light-years.</p>
+          </div>
+
+          <div class="formula-card" id="card-eq-doppler-shift" data-eq="dopplerColorShift">
+            <div class="card-title-row">
+              <h4>10. Relativistic Doppler Color Shift (Visible Spectrum)</h4>
+              <span class="eq-status-badge idle" id="badge-eq-doppler-shift">IDLE</span>
+            </div>
+            <div class="formula-render" id="formula-doppler-shift"></div>
+            <p class="formula-desc">In the optical band, relativistic orbital velocity transforms emission frequency directly: Approaching gas shifts into blue/UV (\(\nu_{\text{obs}} > \nu_{\text{emit}}\)), while receding gas drops into deep red/infrared.</p>
+          </div>
+
+          <div class="formula-card is-running" id="card-eq-synchrotron" data-eq="synchrotronBeaming">
+            <div class="card-title-row">
+              <h4>11. Relativistic Synchrotron Beaming Law</h4>
+              <span class="eq-status-badge running" id="badge-eq-synchrotron">● RUNNING</span>
+            </div>
+            <div class="formula-render" id="formula-synchrotron"></div>
+            <p class="formula-desc">In radio (EHT 1.3mm) and X-ray corona bands, non-thermal synchrotron radiation beams as \(I_\nu \propto \delta^{3+\alpha}\), boosting the approaching horn by factors of 10x to 100x!</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
