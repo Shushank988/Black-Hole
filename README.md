@@ -96,7 +96,7 @@ The simulation numerically evaluates 16 key equations from Kerr metric General R
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/black-hole-simulation.git
+git clone https://github.com/Shushank988/black-hole-simulation.git
 cd black-hole-simulation
 
 # Install dependencies

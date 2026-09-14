@@ -280,6 +280,38 @@ vec3 getSpectralColor(float temp, float shift, float r, float rNorm, float iscoG
     }
 }
 
+// --- Exact General Relativity Geodesic Acceleration (Schwarzschild + Kerr Gravitomagnetism) ---
+vec3 getGeodesicAcceleration(vec3 pos, vec3 vel, float rs, float aSpin, float lensingStrength) {
+    float r = length(pos);
+    float r2 = r * r;
+    float r5 = r2 * r2 * r;
+    if (r5 < 1e-4) return vec3(0.0);
+
+    // Light ray velocity is a unit vector (|vHat| = 1)
+    vec3 vHat = normalize(vel);
+
+    // Component of pos perpendicular to ray velocity
+    vec3 rPerp = pos - dot(pos, vHat) * vHat;
+    float b2 = dot(rPerp, rPerp); // impact parameter squared
+
+    // Exact Schwarzschild null geodesic spatial curvature:
+    // a_Schw = -1.5 * rs * (b^2 / r^5) * rPerp
+    // Strictly perpendicular to velocity, so dot(aSchw, vHat) == 0 (speed of light is preserved)
+    vec3 aSchw = -1.5 * rs * (b2 / r5) * rPerp;
+
+    // Exact Kerr gravitomagnetic spin-orbit coupling (Lense-Thirring effect)
+    // Black hole spin axis is aligned with Y (poloidal axis): s = (0, 1, 0)
+    // Dipole gravitomagnetic field: B_g = (a* / r^5) * [3 (s · r) r - r^2 s]
+    // Lorentz-like gravitomagnetic acceleration: a_spin = 2 * (vHat x B_g)
+    // Strictly perpendicular to velocity, so dot(a_spin, vHat) == 0
+    vec3 spinAxis = vec3(0.0, 1.0, 0.0);
+    float sDotR = dot(spinAxis, pos);
+    vec3 Bg = (aSpin / r5) * (3.0 * sDotR * pos - r2 * spinAxis);
+    vec3 aSpinForce = 2.0 * cross(vHat, Bg);
+
+    return (aSchw + aSpinForce) * lensingStrength;
+}
+
 // --- Sample Accretion Disk at Equatorial Plane Crossing ---
 vec4 sampleDisk(vec3 pos, vec3 dir, float rs) {
     float r = length(pos);
@@ -309,15 +341,18 @@ vec4 sampleDisk(vec3 pos, vec3 dir, float rs) {
 
     // Kerr circular geodesic orbital velocity: Omega = 1 / (r^(3/2) + a)
     float rM = r / (0.5 * rs);
-    float vK = clamp(1.0 / (sqrt(max(1.1, rM)) + uSpin * 0.35), 0.0, 0.65);
+    float aSpin = clamp(uSpin, 0.0, 0.998);
+    // Exact Keplerian circular angular velocity: Omega_K = 1 / (rM^(3/2) + a*)
+    // Relativistic orbital speed in c units: v_K = rM * Omega_K = rM / (rM^(3/2) + a*)
+    float vK = clamp(rM / (pow(rM, 1.5) + aSpin), 0.0, 0.995);
     vec3 vDir = normalize(vec3(-pos.z, 0.0, pos.x));
-    vec3 vel = vDir * vK * uDiskSpeed;
+    vec3 vel = vDir * vK;
 
-    // Relativistic Doppler beaming: D = 1 / (gamma * (1 - v·n))
+    // Relativistic Doppler beaming: delta = 1 / (gamma * (1 - v·n))
     float v2 = dot(vel, vel);
-    float gamma = 1.0 / sqrt(max(0.01, 1.0 - v2));
-    float cosA = dot(normalize(-dir), normalize(vel));
-    float doppler = uDopplerEnabled ? 1.0 / (gamma * (1.0 - vK * uDiskSpeed * cosA)) : 1.0;
+    float gamma = 1.0 / sqrt(max(0.001, 1.0 - v2));
+    float cosA = dot(normalize(-dir), vDir);
+    float doppler = uDopplerEnabled ? 1.0 / (gamma * max(0.001, 1.0 - vK * cosA)) : 1.0;
 
     // Spectral beaming exponent: I_nu ~ delta^(3 + alpha)
     float beamingPower = 3.0;
@@ -336,8 +371,9 @@ vec4 sampleDisk(vec3 pos, vec3 dir, float rs) {
     }
     float beaming = pow(doppler, beamingPower);
 
-    // Gravitational redshift: sqrt(1 - r_s/r)
-    float gRedshift = uGravRedshiftEnabled ? sqrt(max(0.001, 1.0 - rs / r)) : 1.0;
+    // Exact Kerr gravitational time dilation for circular equatorial disk:
+    // u^t = 1 / sqrt(1 - 3/rM + 2*a*/rM^(3/2)) => g_grav = sqrt(1 - 3/rM + 2*a*/rM^(3/2))
+    float gRedshift = uGravRedshiftEnabled ? sqrt(max(0.001, 1.0 - 3.0 / rM + 2.0 * aSpin / pow(rM, 1.5))) : 1.0;
     float netShift = doppler * gRedshift;
 
     // Multi-scale turbulent gas structure
@@ -511,19 +547,17 @@ void main() {
     }
 
     // --- Geodesic Ray Marching ---
+    vec3 rayVel = rayDir;
+    vec3 accel = getGeodesicAcceleration(rayPos, rayVel, rs, aSpin, uLensingStrength);
+
     for (int step = 0; step < 260; step++) {
         if (step >= maxSteps) break;
 
         float r = length(rayPos);
         minR = min(minR, r);
 
-        // Event horizon & shadow capture (with Kerr spin-asymmetry)
-        vec3 Lvec = cross(rayPos, rayDir);
-        float L = length(Lvec);
-        float inward = dot(rayPos, rayDir);
-
-        float bCritSpin = bCrit * (1.0 - 0.22 * aSpin * (Lvec.y / (L + 1e-5)));
-        if (r <= rPlus * 1.01 || (L <= bCritSpin * 0.97 && r < rPh * 1.2 && inward < 0.0)) {
+        // Strict General Relativity Outer Event Horizon: r <= r_+ = M + sqrt(M^2 - a^2)
+        if (r <= rPlus * 1.002) {
             hitHorizon = true;
             break;
         }
@@ -537,64 +571,66 @@ void main() {
             }
         }
 
-        // Disk plane crossing detection (y = 0)
-        if (prevPos.y * rayPos.y <= 0.0 && abs(prevPos.y - rayPos.y) > 1e-5) {
-            float tP = prevPos.y / (prevPos.y - rayPos.y);
-            vec3 hitP = mix(prevPos, rayPos, tP);
+        // Adaptive step size based on local spacetime curvature
+        // Fine sub-steps near the photon sphere and horizon, larger steps in asymptotic flat spacetime
+        float dt = dtBase * max(0.28, (r - rPlus * 0.85) * 0.35);
 
-            vec4 ds = sampleDisk(hitP, rayDir, rs);
-            if (ds.a > 0.001) {
-                diskAccum += ds.rgb * (1.0 - diskAlpha);
-                diskAlpha += ds.a * (1.0 - diskAlpha);
-                if (diskAlpha >= 0.95) break;
+        // Direction-preserving Velocity Verlet Integration
+        vec3 vHalf = normalize(rayVel + 0.5 * accel * dt);
+        vec3 nextPos = rayPos + vHalf * dt;
+
+        // Check if nextPos has crossed the event horizon
+        float nextR = length(nextPos);
+        if (nextR <= rPlus * 1.005) {
+            hitHorizon = true;
+            break;
+        }
+
+        // Disk plane crossing detection (y = 0) between rayPos and nextPos
+        if (rayPos.y * nextPos.y <= 0.0 && abs(rayPos.y - nextPos.y) > 1e-5) {
+            float tP = rayPos.y / (rayPos.y - nextPos.y);
+            vec3 hitP = mix(rayPos, nextPos, tP);
+            float rHit = length(hitP);
+
+            // Only sample disk if the crossing is outside the event horizon
+            if (rHit > rPlus * 1.01) {
+                vec4 ds = sampleDisk(hitP, vHalf, rs);
+                if (ds.a > 0.001) {
+                    diskAccum += ds.rgb * (1.0 - diskAlpha);
+                    diskAlpha += ds.a * (1.0 - diskAlpha);
+                    if (diskAlpha >= 0.95) break;
+                }
             }
         }
 
         // Thin volumetric disk haze near equatorial plane
         float diskH = 0.035 * r;
         if (abs(rayPos.y) < diskH && r >= uDiskInner && r <= uDiskOuter) {
-            vec4 dv = sampleDisk(rayPos, rayDir, rs);
+            vec4 dv = sampleDisk(rayPos, vHalf, rs);
             float sa = clamp(dv.a * 0.12, 0.0, 0.4);
             diskAccum += dv.rgb * sa * (1.0 - diskAlpha);
             diskAlpha += sa * (1.0 - diskAlpha);
         }
 
-        // Adaptive step size (smaller near the black hole)
-        float dt = dtBase * max(0.35, (r - rs * 0.85) * 0.32);
+        // Compute acceleration at next position
+        vec3 nextAccel = getGeodesicAcceleration(nextPos, vHalf, rs, aSpin, uLensingStrength);
 
-        // Schwarzschild geodesic deflection
-        float L2 = L * L;
-        vec3 accel = -1.5 * rs * uLensingStrength * (rayPos / pow(r, 5.0)) * L2;
-
-        // Kerr Lense-Thirring frame-dragging force (spacetime dragged in direction of spin)
-        vec3 spinAxis = vec3(0.0, 1.0, 0.0);
-        vec3 dragField = cross(spinAxis, rayPos) * (2.0 * rs * aSpin / pow(max(r, 0.8), 4.0));
-        accel += cross(dragField, rayDir) * uLensingStrength;
-
-        float fade = smoothstep(30.0, 16.0, r);
+        // Complete Velocity Verlet step
+        rayVel = normalize(vHalf + 0.5 * nextAccel * dt);
         prevPos = rayPos;
-        rayPos += rayDir * dt;
-        rayDir = normalize(rayDir + accel * dt * fade);
+        rayPos = nextPos;
+        accel = nextAccel;
 
         // Terminate only if ray has exited the active region and is moving outward
-        if (r > R_BOUND && dot(rayPos, rayDir) > 0.0) break;
+        if (r > R_BOUND && dot(rayPos, rayVel) > 0.0) break;
     }
-
-    // Photon ring — multiple thin sub-rings at the photon sphere
-    float ringDist = minR - rPh;
-    float ring1 = exp(-pow(ringDist * 6.5, 2.0)) * 0.85;
-    float ring2 = exp(-pow((ringDist - 0.08) * 12.0, 2.0)) * 0.35;
-    float ring3 = exp(-pow((ringDist + 0.06) * 14.0, 2.0)) * 0.20;
-    float totalRing = ring1 + ring2 + ring3;
-    vec3 ringCol = mix(vec3(1.0, 0.65, 0.25), vec3(1.0, 0.96, 0.88), totalRing);
-    diskAccum += ringCol * totalRing * (1.0 - diskAlpha);
 
     // Compositing
     vec3 finalColor;
     if (hitHorizon) {
         finalColor = diskAccum;
     } else {
-        vec3 sky = getCelestialBackground(normalize(rayDir));
+        vec3 sky = getCelestialBackground(normalize(rayVel));
         finalColor = diskAccum + sky * (1.0 - diskAlpha);
     }
 

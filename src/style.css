@@ -459,20 +459,24 @@ canvas {
 
 /* 4D Spacetime Scrubber Bar (Bottom Center) */
 .time-scrubber-panel {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
   background: var(--panel-bg);
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--panel-border);
   border-radius: 14px;
-  padding: 8px 12px;
+  padding: 8px 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  flex: 1 1 260px;
-  max-width: 480px;
-  min-width: 200px;
+  width: min(520px, calc(100% - 660px));
+  min-width: 320px;
   box-sizing: border-box;
+  z-index: 20;
 }
 
 .time-label {
@@ -540,8 +544,9 @@ canvas {
 
 /* Bottom Main Layout */
 .bottom-container {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: flex-end;
   gap: 12px;
   width: 100%;
@@ -830,7 +835,7 @@ canvas {
   -webkit-backdrop-filter: var(--glass-blur) !important;
   width: 270px !important;
   max-width: 270px !important;
-  max-height: calc(100vh - 110px) !important;
+  max-height: calc(100vh - 165px) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   box-sizing: border-box !important;
@@ -841,11 +846,11 @@ canvas {
 .lil-gui.lil-auto-place,
 .lil-gui.autoPlace {
   position: fixed !important;
-  top: 96px !important;
+  top: 146px !important;
   right: 16px !important;
   width: 270px !important;
   max-width: 270px !important;
-  max-height: calc(100vh - 110px) !important;
+  max-height: calc(100vh - 165px) !important;
   z-index: 1001 !important;
   margin: 0 !important;
 }
@@ -1276,6 +1281,10 @@ canvas {
     max-width: 100%;
   }
   .time-scrubber-panel {
+    position: static;
+    transform: none;
+    left: auto;
+    bottom: auto;
     width: 100%;
     max-width: 100%;
   }

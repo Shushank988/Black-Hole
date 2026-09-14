@@ -250,11 +250,24 @@ export function calculatePhysicsMetrics(mass, spin = 0.94, targetKey = 'm87') {
   const r_isco_factor = 3 + Z2 - Math.sqrt((3 - Z1) * (3 + Z1 + 2 * Z2));
   
   const r_isco = (r_isco_factor / 2) * 2.0 * mass;
-  const v_isco_fraction = 1.0 / Math.sqrt(Math.max(1.2, r_isco_factor));
+  
+  // Exact Bardeen-Press-Teukolsky circular orbital velocity at ISCO relative to LNRF (ZAMO)
+  // v_ISCO = (r^2 - 2*a*sqrt(r) + a^2) / (sqrt(r^2 - 2*r + a^2) * (r^(3/2) + a))
+  // In Schwarzschild (a=0, r=6): v = 36 / (sqrt(24) * 6*sqrt(6)) = 36 / (12*6) = 0.500 c exactly
+  const r_i = r_isco_factor;
+  const num_v = r_i * r_i - 2.0 * a * Math.sqrt(r_i) + a * a;
+  const den_v = Math.sqrt(Math.max(1e-5, r_i * r_i - 2.0 * r_i + a * a)) * (Math.pow(r_i, 1.5) + a);
+  const v_isco_fraction = Math.min(0.999, Math.max(0.1, num_v / den_v));
+
+  // Critical impact parameter for photon capture in Schwarzschild: b_crit = 3*sqrt(3)*M = 3*sqrt(3)/2 * r_s
+  // Shadow diameter is 2 * b_crit = 6*sqrt(3)*M
   const b_crit = (3 * Math.sqrt(3) / 2) * 2.0 * mass;
 
-  // Frame Dragging Angular Frequency at Horizon Omega_H = a / (2 * r_H)
-  const r_horizon_factor = 1 + Math.sqrt(1 - a * a);
+  // Frame Dragging Angular Frequency at Horizon Omega_H = (a* c) / (2 * r_H) = (a* c) / (r_s * (1 + sqrt(1 - a*^2)))
+  const r_horizon_factor = 1 + Math.sqrt(Math.max(0.0, 1 - a * a));
+  // In SI units (rad / s)
+  const omegaH_rad_s = (a * c) / (r_s_meters * r_horizon_factor);
+  // Dimensionless fraction of maximal Kerr horizon frequency (at a=1, Omega_H = 0.5 c/M)
   const omegaFrameDragging = a / (2.0 * r_horizon_factor);
 
   // Kerr Outer Horizon r_+ = M + sqrt(M^2 - a^2) where M = 0.5 * r_s
@@ -277,6 +290,7 @@ export function calculatePhysicsMetrics(mass, spin = 0.94, targetKey = 'm87') {
     b_crit,
     v_isco_fraction,
     omegaFrameDragging,
+    omegaH_rad_s,
     r_s_meters,
     rsKm: (r_s_meters / 1000),
   };
@@ -284,17 +298,17 @@ export function calculatePhysicsMetrics(mass, spin = 0.94, targetKey = 'm87') {
 
 // Kerr Spacetime & EHT Astrophysics Formulas
 export const LATEX_FORMULAS = {
-  kerrMetric: String.raw`\begin{aligned} ds^2 = &-\left(1 - \frac{r_s r}{\rho^2}\right) c^2 dt^2 - \frac{2 r_s r a \sin^2\theta}{\rho^2} c\,dt\,d\phi + \frac{\rho^2}{\Delta} dr^2 \\ &+ \rho^2 d\theta^2 + \left(r^2 + a^2 + \frac{r_s r a^2 \sin^2\theta}{\rho^2}\right)\sin^2\theta\, d\phi^2 \end{aligned}`,
-  frameDragging: String.raw`\Omega = -\frac{g_{t\phi}}{g_{\phi\phi}} = \frac{a\, r_s\, r\, c}{(r^2+a^2)^2 - a^2 \Delta \sin^2\theta}, \quad \Omega_H = \frac{a\, c}{2\, r_H}`,
-  kerrIsco: String.raw`r_{\text{ISCO}} = M\!\left(3 + Z_2 \mp \sqrt{(3-Z_1)(3+Z_1+2Z_2)}\right), \quad a^* \in [0,\, 0.998]`,
+  kerrMetric: String.raw`\begin{aligned} ds^2 = &-\left(1 - \frac{r_s r}{\rho^2}\right) c^2 dt^2 - \frac{r_s r a \sin^2\theta}{\rho^2} c\,dt\,d\phi + \frac{\rho^2}{\Delta} dr^2 \\ &+ \rho^2 d\theta^2 + \left(r^2 + a^2 + \frac{r_s r a^2 \sin^2\theta}{\rho^2}\right)\sin^2\theta\, d\phi^2 \end{aligned}`,
+  frameDragging: String.raw`\Omega(r, \theta) = -\frac{g_{t\phi}}{g_{\phi\phi}} = \frac{a\, r_s\, r\, c}{(r^2+a^2)^2 - a^2 \Delta \sin^2\theta}, \quad \Omega_H = \frac{a^* c}{2\, r_H} = \frac{a^* c}{r_s (1 + \sqrt{1 - a^{*2}})}`,
+  kerrIsco: String.raw`r_{\text{ISCO}} = M\!\left(3 + Z_2 - \sqrt{(3-Z_1)(3+Z_1+2Z_2)}\right), \quad Z_1 = 1 + \sqrt[3]{1 - {a^*}^2}\left(\sqrt[3]{1+a^*} + \sqrt[3]{1-a^*}\right)`,
   ergosphere: String.raw`r_E(\theta) = M + \sqrt{M^2 - a^2 \cos^2\theta}, \quad r_+ = M + \sqrt{M^2 - a^2}`,
-  gravitationalRedshift: String.raw`1 + z = \frac{1}{\sqrt{1 - \frac{r_s}{r}}}, \quad \nu_{\text{obs}} = \nu_{\text{emit}} \sqrt{1 - \frac{r_s}{r}}`,
-  shakuraSunyaev: String.raw`T(r) = \left[ \frac{3 G M \dot{M}}{8 \pi \sigma r^3} \left(1 - \sqrt{\frac{r_{\text{in}}}{r}}\right) \right]^{1/4} \propto r^{-3/4}`,
-  lenseThirring: String.raw`\vec{a}_{\text{LT}} = \frac{2\,r_s\,a^*}{r^4}(\hat{y}\times\vec{r})\times\vec{v}_{\text{ray}}`,
-  blandfordZnajek: String.raw`P_{\text{jet}} = \frac{1}{128}\,\Omega_H^2\,\Phi_B^2 \approx 10^{37}\;\text{W} \quad (\text{M87* Polar Jet})`,
-  dopplerColorShift: String.raw`\nu_{\text{obs}} = \delta \cdot \nu_{\text{emit}} = \frac{\sqrt{1 - \frac{r_s}{r}}}{\gamma \left(1 - \frac{\vec{v} \cdot \hat{n}}{c}\right)} \, \nu_{\text{emit}} \quad (\text{Relativistic Optical Doppler})`,
+  gravitationalRedshift: String.raw`1 + z = \frac{1}{\sqrt{1 - \frac{r_s}{r}}}, \quad u^t_{\text{disk}} = \frac{1}{\sqrt{1 - \frac{3M}{r} + \frac{2 a^* M^{3/2}}{r^{3/2}}}}`,
+  shakuraSunyaev: String.raw`T(r) = \left[ \frac{3 G M \dot{M}}{8 \pi \sigma r^3} \left(1 - \sqrt{\frac{r_{\text{in}}}{r}}\right) \right]^{1/4} \propto r^{-3/4}, \quad r_{\text{in}} = r_{\text{ISCO}}`,
+  lenseThirring: String.raw`\vec{a}_{\text{spin}} = 2 \vec{v} \times \vec{B}_g = \frac{2 G}{c^3 r^5} \vec{v} \times \left(3(\vec{J}\cdot\vec{r})\vec{r} - \vec{J}r^2\right) \quad (\text{Gravitomagnetic Spin Deflection})`,
+  blandfordZnajek: String.raw`P_{\text{BZ}} = \frac{k}{4\pi c}\,\Omega_H^2\,\Phi_B^2 \approx 10^{37}\;\text{W} \quad (\text{M87* Polar Jet Power})`,
+  dopplerColorShift: String.raw`g = \frac{\nu_{\text{obs}}}{\nu_{\text{emit}}} = \frac{\sqrt{1 - \frac{3M}{r} + \frac{2 a^* M^{3/2}}{r^{3/2}}}}{\gamma \left(1 - \frac{\vec{v} \cdot \hat{n}}{c}\right)}, \quad \nu_{\text{obs}} = g \cdot \nu_{\text{emit}}`,
   synchrotronBeaming: String.raw`I_\nu(\nu) = \delta^{3+\alpha} I_{0,\nu}\left(\frac{\nu}{\delta}\right) \quad (\text{EHT 1.3mm \& X-Ray Corona Beaming})`,
-  ehtAngularDiameter: String.raw`\theta_{\text{EHT}} = \frac{2\, b_{\text{crit}}}{D} = \frac{3\sqrt{3}\, G M}{c^2 D} \approx \begin{cases} 51.8\;\mu\text{as} & \text{Sgr A*} \\ 42.0\;\mu\text{as} & \text{M87*} \end{cases}`,
+  ehtAngularDiameter: String.raw`\theta_{\text{EHT}} = \frac{2\, b_{\text{crit}}}{D} = \frac{6\sqrt{3}\, G M}{c^2 D} \approx \begin{cases} 51.8\;\mu\text{as} & \text{Sgr A*} \\ 42.0\;\mu\text{as} & \text{M87*} \end{cases}`,
   ehtBeamConvolution: String.raw`\theta_{\text{beam}} \approx 1.22 \frac{\lambda}{D_{\text{Earth}}} \approx 20\text{--}25\,\mu\text{as}, \quad I_{\text{observed}}(\alpha, \beta) = [I_{\text{GR}} * \mathcal{G}_{\text{beam}}](\alpha, \beta)`,
   ixpePolarization: String.raw`\Pi_{\text{syn}} = \frac{p+1}{p + 7/3} \approx 72\%, \quad \chi_{\text{EVPA}} = \frac{1}{2}\arctan\left(\frac{U}{Q}\right) \quad (\text{IXPE Magnetic Topology})`,
   ngehtResolution: String.raw`\theta_{\text{ngEHT}} \approx 1.22 \frac{\lambda_{\text{345 GHz}}}{D_{\text{Earth}}} \approx 10\ \mu\text{as} \quad (\text{Next-Gen EHT Resolves Photon Ring } n=1)`,

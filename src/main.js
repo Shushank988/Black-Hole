@@ -214,7 +214,13 @@ function syncUniforms() {
   if (valErgoKm) valErgoKm.textContent = `Ergo r_E: ${m.r_ergo_km.toExponential(2)} km`;
   if (valAngularSize) valAngularSize.textContent = `${m.angularDiameterMuAs.toFixed(1)} μas (EHT)`;
   if (valSpin) valSpin.textContent = state.spin.toFixed(2);
-  if (valFrameDrag) valFrameDrag.textContent = `Ω_H: ${(m.omegaFrameDragging * 100).toFixed(1)}%`;
+  if (valFrameDrag) {
+    if (m.omegaH_rad_s && m.omegaH_rad_s > 0.0) {
+      valFrameDrag.textContent = `Ω_H: ${m.omegaH_rad_s.toExponential(2)} rad/s (${(m.omegaFrameDragging * 100).toFixed(1)}%)`;
+    } else {
+      valFrameDrag.textContent = `Ω_H: ${(m.omegaFrameDragging * 100).toFixed(1)}% limit`;
+    }
+  }
   if (valVisco) valVisco.textContent = `${(m.v_isco_fraction * 100).toFixed(1)}% c`;
   if (valIscoRadius) valIscoRadius.textContent = `r_ISCO: ${(m.r_isco / (0.5 * m.rs)).toFixed(2)} M`;
   const pTarget = TARGET_PROFILES[state.target] || TARGET_PROFILES.m87;
