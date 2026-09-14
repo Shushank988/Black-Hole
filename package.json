@@ -1,7 +1,7 @@
 {
   "name": "black-hole-simulation",
   "version": "1.0.0",
-  "description": "Interactive real-time 4D Kerr General Relativity Black Hole simulation (Sagittarius A* & M87*) powered by Three.js and GLSL geodesic raymarching.",
+  "description": "Interactive real-time 4D Kerr General Relativity Black Hole simulation (Sagittarius A* & M87*) powered by Three.js, WebGL2, and GLSL geodesic raymarching.",
   "license": "MIT",
   "type": "module",
   "keywords": [
