@@ -2,7 +2,7 @@
 
 An interactive, real-time General Relativity simulation of supermassive black holes (**Sagittarius A\*** and **M87\***) powered by WebGL2, Three.js, and GLSL geodesic raymarching.
 
-![4D Spacetime Lab Preview](./public/og-image.png)
+![4D Spacetime Lab Preview — Gargantua Extreme Kerr Black Hole & Real-time Telemetry HUD](./public/og-image.png)
 
 ---
 
@@ -40,6 +40,11 @@ When you search for **M87\*** or **Sagittarius A\*** on Google, the famous image
 
 **The Answer:** This simulation models the **physical ground truth** that astronomers are actually observing!
 
+| Ground Truth (Unblurred Physics) | Real Earth VLBI Telescope View (20 μas Blur) |
+| :---: | :---: |
+| ![M87 Ground Truth](./public/m87-preview.png) | ![EHT 20 microarcsecond Blur](./public/eht-blur-preview.png) |
+| *M87\* Kerr Black Hole with relativistic polar jet & Doppler-beamed disk* | *Convolved with Earth-aperture diffraction beam producing the real donut* |
+
 1. **Earth's Finite Telescope Resolution**: The Event Horizon Telescope (EHT) synthesized a virtual radio dish the diameter of Earth ($D \approx 10,000\text{ km}$) operating at $\lambda = 1.3\text{ mm}$. By the fundamental diffraction limit:
    $$\theta_{\text{beam}} \approx 1.22 \frac{\lambda}{D} \approx 20\text{ to }25\ \mu\text{as}$$
 2. **The Ring is Tiny**: The black hole shadow is only $\sim 42\text{ to }52\ \mu\text{as}$ wide on Earth's sky. This means the entire ring is only **2 to 3 telescope resolution elements across**!
@@ -66,7 +71,9 @@ When you search for **M87\*** or **Sagittarius A\*** on Google, the famous image
 
 ## 🔬 Scientific Foundations
 
-The simulation numerically evaluates 16 key equations from Kerr metric General Relativity and observational astrophysics:
+The simulation numerically evaluates 16 key equations from Kerr metric General Relativity and observational astrophysics with an interactive KaTeX equations inspector:
+
+![General Relativity & EHT KaTeX Equations Lab](./public/math-lab-preview.png)
 
 1. **Kerr Metric Tensor ($ds^2$)**
 2. **Lense-Thirring Frame Dragging ($\Omega$)**
