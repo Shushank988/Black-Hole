@@ -8,6 +8,8 @@ An interactive, real-time General Relativity simulation of supermassive black ho
 
 ## 🚀 Live Demo & Features
 
+🔗 **Live Simulation Demo:** [https://shushank988.github.io/Black-Hole/](https://shushank988.github.io/Black-Hole/)
+
 - **Kerr Spacetime Geodesics**: Real-time numerical integration of photon trajectories in curved spacetime, featuring gravitational light bending, photon sphere orbit trapping, and asymmetric Kerr shadow silhouettes.
 - **5 Iconic Astronomical Targets**:
   1. 🌌 **Sagittarius A\***: Milky Way galactic center ($4.15 \times 10^6\ M_\odot$), featuring the dense galactic core and S2 star celestial backdrop.
@@ -148,11 +150,17 @@ The optimized bundle will be compiled into the `dist/` directory.
 
 ---
 
-## ☁️ Deployment (Cloudflare Pages / Vercel)
+## ☁️ Deployment
 
 This project is a 100% client-side web application with zero backend requirements.
 
-### Cloudflare Pages
+### GitHub Pages (Automated with GitHub Actions)
+Every push to `main` is automatically built and deployed to GitHub Pages via `.github/workflows/deploy.yml`:
+1. In your GitHub repository, go to **Settings** > **Pages**.
+2. Under **Build and deployment** > **Source**, select **GitHub Actions**.
+3. Push any commit to `main`, and your site will be live at `https://shushank988.github.io/Black-Hole/`.
+
+### Cloudflare Pages / Vercel
 1. Push your repository to **GitHub**.
 2. In the [Cloudflare Dashboard](https://dash.cloudflare.com/), navigate to **Workers & Pages** > **Create application** > **Pages** > **Connect to Git**.
 3. Select your repository and configure:
