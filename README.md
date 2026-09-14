@@ -36,7 +36,7 @@ An interactive, real-time General Relativity simulation of supermassive black ho
 
 | 🔥 Shakura-Sunyaev Thermal Heatmap (Wide Step) | 🔭 JWST Infrared Dust Penetration (Wide Torus) |
 | :---: | :---: |
-| ![Thermal Heatmap](./public/thermal-preview.png) | ![Infrared Torus](./public/infrared-preview.png) |
+| ![Thermal Heatmap](./public/og-image.png) | ![Infrared Torus](./public/infrared-preview.png) |
 | *Relativistic isotherms deformed into teardrops by Kerr frame-dragging* | *Warm dust emission revealing the extended accretion torus & feeding streams* |
 
 > [!NOTE]
