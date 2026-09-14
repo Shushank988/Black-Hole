@@ -589,7 +589,7 @@ function setupGUI() {
 
   const gf = gui.addFolder('GPU Engine');
   gf.add(state, 'maxSteps', 60, 240, 10).name('Max Steps').onChange(syncUniforms);
-  gf.add(state, 'stepSize', 0.04, 0.18, 0.01).name('Step Size').onChange(syncUniforms);
+  gf.add(state, 'stepSize', 0.04, 0.25, 0.01).name('Step Size').listen().onChange(syncUniforms);
   gf.close();
 
   const of = gui.addFolder('Observational Optics');

@@ -116,7 +116,7 @@ export const PHYSICS_DEFAULTS = {
   lensingStrength: 1.0,
   colorPalette: 0,
   maxSteps: 160,
-  stepSize: 0.07,
+  stepSize: 0.13,
   autoRotate: true,
   autoRotateSpeed: 0.8,
   timeSpeed: 1.0,

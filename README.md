@@ -2,7 +2,7 @@
 
 An interactive, real-time General Relativity simulation of supermassive black holes (**Sagittarius A\*** and **M87\***) powered by WebGL2, Three.js, and GLSL geodesic raymarching.
 
-![4D Spacetime Lab Preview — Gargantua Extreme Kerr Black Hole & Real-time Telemetry HUD](./public/og-image.png)
+![4D Spacetime Lab Preview — Shakura-Sunyaev Thermal Heatmap with Wide Step Size & Kerr Frame-Dragging](./public/og-image.png)
 
 ---
 
@@ -31,6 +31,13 @@ An interactive, real-time General Relativity simulation of supermassive black ho
   4. **EHT 1.3 mm (20 μas)**: Authentic Earth-diameter radio interferometer showing why real press photos look like fuzzy orange donuts!
 - **Interactive HUD & GR Math Lab**: Live mathematical readout with **16 rendered LaTeX equations** (via KaTeX), active equation filtering, ISCO auto-lock, and orbital telemetry.
 - **Zen View & Snapshot Tool**: Fullscreen clean 360° touch/mouse interaction and instant high-resolution image exporter.
+
+### 🌈 Multi-Spectral Observational Gallery
+
+| 🔥 Shakura-Sunyaev Thermal Heatmap (Wide Step) | 🔭 JWST Infrared Dust Penetration (Wide Torus) |
+| :---: | :---: |
+| ![Thermal Heatmap](./public/thermal-preview.png) | ![Infrared Torus](./public/infrared-preview.png) |
+| *Relativistic isotherms deformed into teardrops by Kerr frame-dragging* | *Warm dust emission revealing the extended accretion torus & feeding streams* |
 
 ---
 
