@@ -39,6 +39,24 @@ An interactive, real-time General Relativity simulation of supermassive black ho
 | ![Thermal Heatmap](./public/thermal-preview.png) | ![Infrared Torus](./public/infrared-preview.png) |
 | *Relativistic isotherms deformed into teardrops by Kerr frame-dragging* | *Warm dust emission revealing the extended accretion torus & feeding streams* |
 
+> [!NOTE]
+> ### 🎨 Physics-Grounded Colors: Not Just Random Aesthetics
+> The colors throughout this simulation are **not arbitrary artistic choices or random color palettes**. Every wavelength, hue transition, and brightness gradient is calculated in real-time directly from fundamental General Relativity and astrophysical radiation transfer equations:
+>
+> 1. **Relativistic Optical Doppler Shift ($g = \nu_{\text{obs}}/\nu_{\text{emit}}$)**:
+>    Accretion plasma rotates at relativistic velocities up to $\sim 65\%\ c$. The approaching gas undergoes intense relativistic blue-shifting (compressing frequencies into brilliant cyan, blue, and ultraviolet white), while the receding gas is red-shifted into deep crimson and infrared.
+> 2. **Gravitational Redshift & Time Dilation ($u^t = [1 - 3M/r + 2a^*M^{3/2}/r^{3/2}]^{-1/2}$)**:
+>    Photons escaping the gravitational well near the Kerr event horizon lose energy climbing out of curved spacetime, causing emission near the innermost stable circular orbit ($r_{\text{ISCO}}$) to dim and shift downward in frequency.
+> 3. **Shakura-Sunyaev Thermodynamics ($T_{\text{eff}}(r) \propto r^{-3/4}$)**:
+>    Effective plasma temperature scales with radius. The Thermal Heatmap computes multi-color blackbody isotherms deformed into asymmetric teardrop contours by Kerr frame-dragging ($\Omega$).
+> 4. **Relativistic Synchrotron Beaming ($I_\nu \propto \delta^{3+\alpha}$)**:
+>    Radiation emitted in the direction of orbital motion is beamed forward into a tight relativistic cone, concentrating photon flux into the iconic blazing crescent.
+> 5. **Dust-Penetrating Mid-Infrared (JWST NIRCam / VLT GRAVITY)**:
+>    In the infrared spectrum, interstellar extinction drops by orders of magnitude, revealing warm dust emission ($T \sim 1000\text{ K}$) across the wide outer accretion torus in rich cosmic magenta, copper, and warm peach tones.
+>
+> **A Note on Verification:**  
+> These formulas directly implement the peer-reviewed equations of Kerr metric astrophysics (Bardeen, Press, Teukolsky, Shakura & Sunyaev, and the Event Horizon Telescope Collaboration). The colors form naturally as the mathematical equations dictate. However, we intentionally **do not claim 100% mathematical verification** — real-time GPU raymarching uses discrete numerical integration steps (Velocity Verlet), and higher-order relativistic nuances, discrete step approximations, or mathematical edge cases can exist.
+
 ---
 
 ## 🔭 Why Doesn't This Look Like the Blurry Orange Donut on Google?
